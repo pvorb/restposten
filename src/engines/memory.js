@@ -29,14 +29,18 @@ memory.protocol = 'memory';
 function Memory(options) {
   options = options || {};
 
-  this.uri = options.uri;
+  var uri = this.uri = options.uri;
+  var counter = 0;
+  function incr() {
+    return ++counter;
+  }
 
   // application-wide store
   if (typeof options.uri == 'string')
-    if (!stores[this.uri])
-      this.store = stores[this.uri] = {};
+    if (!stores[uri])
+      this.store = stores[uri] = {};
     else
-      this.store = stores[this.uri];
+      this.store = stores[uri];
   // connection-wide store
   else
     this.store = {};
@@ -62,12 +66,20 @@ Memory.prototype.get = function(query, callback) {
 /**
  * Save a value to the db.
  * 
- * @param id
+ * @param query
+ *            [optional]
  * @param val
  * @param callback
  *            (err, changeCount)
  */
-Memory.prototype.save = function(id, val, callback) {
-  this.store[id] = val;
+Memory.prototype.save = function(query, val, callback) {
+  if (arguments.length < 3) {
+    callback = val;
+    val = query;
+  }
+
+  query += '';
+
+  this.store[query] = val;
   callback(null, 1);
 };
