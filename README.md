@@ -4,7 +4,7 @@ persistence
 Persistence is a data persistence module for [flatiron](http://flatironjs.org/).
 You can use it as an alternative for
 [resourceful](https://github.com/flatiron/resourceful). It uses [JSON
-Schema](http://json-schema.js/) for data validation.
+Schema](http://json-schema.org/) for data validation.
 
 
 Installation
