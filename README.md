@@ -71,7 +71,7 @@ examples and further documentation on JSON Schema.
 Maintainers
 -----------
 
-  * [pvorb](/pvorb)
+  * [pvorb](https://github.com/pvorb)
 
 
 License
