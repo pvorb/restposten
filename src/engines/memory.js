@@ -19,8 +19,6 @@ memory.connect = function(options, callback) {
   callback(null, new Memory(options));
 };
 
-memory.protocol = 'memory';
-
 /**
  * Memory engine constructor.
  * 

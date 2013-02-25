@@ -2,4 +2,4 @@ var JaySchema = require('jayschema');
 
 var common = exports;
 
-common.validator = new JaySchema();
+require('./validators/').getValidator;
