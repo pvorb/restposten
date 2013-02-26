@@ -77,4 +77,4 @@ Maintainers
 License
 -------
 
-[MIT License](https://github.com/n-fuse/persistence/blob/master/LICENSE.txt)
+[MIT License](License.txt)
