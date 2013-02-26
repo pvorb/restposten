@@ -1,7 +1,9 @@
+'use strict';
+
 var events = require('events');
 
 var persistence = exports;
-persistence.Schema = require('./schema');
+persistence.SchemaInstance = require('./schema_instance');
 persistence.schemas = {};
 
 persistence.validator = null;
@@ -42,30 +44,44 @@ persistence.getEngine = function() {
  *            string
  * @param schema
  *            JSON schema object
- * @param callback
- *            (err)
+ * @returns factory function for creating new instances
  */
-persistence.define = function(name, schema, callback) {
+persistence.define = function(name, schema) {
 
   function Factory(attrs) {
-    var instance = new persistence.Schema(name, attrs);
-    
-    for (var m in Factory) {
+    var self = this;
+    persistence.SchemaInstance.call(this, attrs, schema);
+
+    // verify methods
+    for ( var m in Factory) {
       if (typeof Factory[m] != 'undefined' && Factory[m].type === 'method') {
         if (typeof this[m] != 'undefined')
-          throw new Error(m + ' is a reserverd word on the Schema instance');
+          throw new Error(m + ' is a reserverd word on the schema instance');
       }
+      this[m] = Factory[m];
+      this[m].type = "method";
+      this[m].required = false;
     }
-    
+
+    // define properties from schema
+    Object.keys(this._properties).forEach(function(k) {
+      resourceful.defineProperty(self, k, Factory.schema.properties[k]);
+    });
+
     return instance;
   }
 
+  // define the properties that each schema must have
+
+  // set name
+  Factory.name = name;
+
   // set schema
-  factory.schema = schema;
+  Factory.schema = schema;
 
   // prototype inheritance
-  Factory.__proto__ = persistence.Schema;
-  Factory.prototype.__proto__ = persistence.Schema.prototype
+  Factory.__proto__ = persistence.SchemaInstance;
+  Factory.prototype.__proto__ = persistence.SchemaInstance.prototype
 
   // define some hooks
   Factory.hooks = {
@@ -73,7 +89,68 @@ persistence.define = function(name, schema, callback) {
     after : {}
   };
 
-  Factory.emitter = new events.EventEmitter;
+  // set before and after hooks
+  [ 'get', 'save', 'update', 'create', 'destroy' ].forEach(function(m) {
+    Factory.hooks.before[m] = [];
+    Factory.hooks.after[m] = [];
+  });
+
+  Factory.emitter = new events.EventEmitter();
+
+  // register hooks with event emitter
+  Object.keys(events.EventEmitter.prototype).forEach(function(k) {
+    Factory[k] = function() {
+      return Factory.emitter[k].apply(Factory.emitter, arguments);
+    };
+  });
+
+  // emit 'init' event
+  Factory.init();
+
+  // Add this schema to the set of resources, persistence knows about
+  persistence.register(name, Factory);
 
   return Factory;
+};
+
+/**
+ * Registers a schema.
+ */
+persistence.register = function(name, schema) {
+  return this.schemas[name] = schema;
+};
+
+/**
+ * Unregisters a schema.
+ */
+persistence.unregister = function(name) {
+  delete this.schemas[name];
+};
+
+/**
+ * TODO: Try to get what this function does.
+ */
+persistence.instantiate = function(obj) {
+  var instance, Factory, id;
+
+  Factory = persistence.resources[this.name];
+
+  id = obj[this.key];
+
+  if (id && this.engine.cache.has(id)) {
+    obj = this.engine.cache.get(id);
+  }
+
+  if (Factory) {
+    // Don't instantiate an already instantiated object
+    if (obj instanceof Factory) {
+      return obj;
+    } else {
+      instance = new Factory(obj);
+      instance.isNewRecord = false;
+      return instance;
+    }
+  } else {
+    throw new Error("unrecognised resource '" + obj.name + "'");
+  }
 };
