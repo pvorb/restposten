@@ -20,5 +20,7 @@
 	"dependencies": {
 	},
 	"devDependencies": {
+		"mocha": "*",
+		"persistence-memory": "<0.1.0"
 	}
 } 
