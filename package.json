@@ -1,29 +1,24 @@
 {
-  "author": {
-    "name": "n-fuse Gmbh, Thomas Hoppe et. al.",
-    "email": "info@n-fuse.de"
-  },
-  "name": "persistence",
-  "version": "0.0.0",
-  "description": "Creates a routing table from an array of Resources",
-  "private": true,
-
-  "main": "./src/index.js",
-
-  "homepage": "http://www.invend.eu",
-  "bugs": {
-    "url": ""
-  },
-
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/pvorb/persistence.git"
-  },
-
-  "dependencies": {
-  	"jayschema": ">=0.1.5 <0.2.0"
-  },
-
-  "devDependencies": {
-  }
+	"name": "persistence",
+	"version": "0.0.0",
+	"description": "Data persistence module for flatiron",
+	"private": true,
+	"author": {
+		"name": "n-fuse Gmbh, Thomas Hoppe et. al.",
+		"email": "info@n-fuse.de"
+	},
+	"maintainers": ["Paul Vorbach <paul@vorb.de>"],
+	"main": "./src/index.js",
+	"homepage": "http://www.invend.eu",
+	"bugs": {
+		"url": "https://github.com/n-fuse/persistence/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/n-fuse/persistence.git"
+	},
+	"dependencies": {
+	},
+	"devDependencies": {
+	}
 } 
