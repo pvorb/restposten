@@ -1,8 +1,8 @@
 var events = require('events');
 
 var persistence = exports;
-persistence.Resource = require('./resource');
-persistence.resources = {};
+persistence.Schema = require('./schema');
+persistence.schemas = {};
 
 persistence.validator = null;
 persistence.engine = null;
@@ -22,7 +22,7 @@ persistence.getValidator = function() {
 };
 
 /**
- * Sets the storage engine.
+ * Sets the storage engine.resource
  */
 persistence.setEngine = function(engine) {
   persistence.engine = engine;
@@ -36,7 +36,7 @@ persistence.getEngine = function() {
 }
 
 /**
- * Defines a new resource factory for creating resources.
+ * Defines a new factory schema for creating instances of schemas.
  * 
  * @param name
  *            string
@@ -48,16 +48,24 @@ persistence.getEngine = function() {
 persistence.define = function(name, schema, callback) {
 
   function Factory(attrs) {
-    var resource = new persistence.Resource(name, attrs);
-    return resource;
+    var instance = new persistence.Schema(name, attrs);
+    
+    for (var m in Factory) {
+      if (typeof Factory[m] != 'undefined' && Factory[m].type === 'method') {
+        if (typeof this[m] != 'undefined')
+          throw new Error(m + ' is a reserverd word on the Schema instance');
+      }
+    }
+    
+    return instance;
   }
 
   // set schema
   factory.schema = schema;
 
   // prototype inheritance
-  Factory.__proto__ = persistence.Resource;
-  Factory.prototype.__proto__ = persistence.Resource.prototype
+  Factory.__proto__ = persistence.Schema;
+  Factory.prototype.__proto__ = persistence.Schema.prototype
 
   // define some hooks
   Factory.hooks = {
