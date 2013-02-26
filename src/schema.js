@@ -2,7 +2,7 @@
 
 var validator = require('./common').validator;
 
-var Resource = exports.Resource = function Resource(attrs) {
+var Schema = exports.Schema = function Schema(attrs) {
   Object.defineProperty(this, '_properties', {
     value : attrs,
     enumerable : false
@@ -13,17 +13,17 @@ var Resource = exports.Resource = function Resource(attrs) {
   });
 };
 
-Resource.create = function(attrs, callback) {
+Schema.create = function(attrs, callback) {
   var instance = new (this)(attrs);
 
-  var validate = Resource.validate(instance, this.schema);
+  var validate = Schema.validate(instance, this.schema);
 };
 
-Resource.prototype.validate = function() {
+Schema.prototype.validate = function() {
   validator.validate(this, this.constructor.schema);
 };
 
-Resource.prototype.save = function(callback) {
+Schema.prototype.save = function(callback) {
   var errs = this.validate();
   // if there are errors
   if (errs.length > 0) {

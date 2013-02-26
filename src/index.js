@@ -1,6 +1,6 @@
 var persistence = module.exports;
 
-persistence.Resource     = require('./resource').Resource;
+persistence.Schema       = require('./schema').Schema;
 persistence.define       = require('./main').define;
 persistence.setValidator = require('./main').setValidator;
 persistence.getValidator = require('./main').getValidator;
