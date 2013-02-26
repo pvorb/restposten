@@ -6,36 +6,24 @@ var persistence = exports;
 persistence.SchemaInstance = require('./schema_instance');
 persistence.schemas = {};
 
-persistence.validator = null;
-persistence.engine = null;
+persistence._validator = null;
+persistence._engine = null;
 
-/**
- * Sets the validator.
- */
-persistence.setValidator = function(validator) {
-  persistence.validator = validator;
-};
+persistence.__defineSetter__('validator', function(validator) {
+  return this._validator = validator;
+});
 
-/**
- * Gets the validator.
- */
-persistence.getValidator = function() {
-  return persistence.validator;
-};
+persistence.__defineGetter__('validator', function() {
+  return this._validator;
+});
 
-/**
- * Sets the storage engine.resource
- */
-persistence.setEngine = function(engine) {
-  persistence.engine = engine;
-};
+persistence.__defineSetter__('engine', function(engine) {
+  return persistence.engine = engine;
+});
 
-/**
- * Gets the storage engine.
- */
-persistence.getEngine = function() {
+persistence.__defineGetter__('engine', function() {
   return persistence.engine;
-}
+});
 
 /**
  * Defines a new factory schema for creating instances of schemas.
@@ -128,7 +116,7 @@ persistence.unregister = function(name) {
 };
 
 /**
- * TODO: Try to get what this function does.
+ * TODO: needed? run by runBeforeHooks
  */
 persistence.instantiate = function(obj) {
   var instance, Factory, id;
