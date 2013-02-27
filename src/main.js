@@ -3,7 +3,7 @@
 var events = require('events');
 
 var persistence = exports;
-persistence.SchemaInstance = require('./schema_instance');
+persistence.SchemaInstance = require('./schema_instance').SchemaInstance;
 persistence.schemas = {};
 
 persistence._validator = null;
@@ -18,11 +18,11 @@ persistence.__defineGetter__('validator', function() {
 });
 
 persistence.__defineSetter__('engine', function(engine) {
-  return persistence.engine = engine;
+  return persistence._engine = engine;
 });
 
 persistence.__defineGetter__('engine', function() {
-  return persistence.engine;
+  return persistence._engine;
 });
 
 /**
@@ -36,28 +36,53 @@ persistence.__defineGetter__('engine', function() {
  */
 persistence.define = function(name, schema) {
 
-  function Factory(attrs) {
+  var Factory = function Factory(attrs) {
     var self = this;
-    persistence.SchemaInstance.call(this, attrs, schema);
+    persistence.SchemaInstance.call(this);
+
+    // set attributes
+    Object.defineProperty(this, '_properties', {
+      value : {},
+      enumerable : false
+    });
+
+    Object.keys(Factory.properties).forEach(function(k) {
+      if (typeof Factory.properties[k]['default'] != 'undefined')
+        self._properties[k] = Factory.properties[k]['default'];
+    });
+
+    if (attrs) {
+      Object.keys(attrs).forEach(function(k) {
+        if (typeof attrs[k] != 'undefined')
+          self._properties[k] = attrs[k];
+      });
+    }
+
+    this._properties.name = name;
 
     // verify methods
     for ( var m in Factory) {
       if (typeof Factory[m] != 'undefined' && Factory[m].type === 'method') {
         if (typeof this[m] != 'undefined')
           throw new Error(m + ' is a reserverd word on the schema instance');
+
+        this[m] = Factory[m];
+        this[m].type = "method";
+        this[m].required = false;
       }
-      this[m] = Factory[m];
-      this[m].type = "method";
-      this[m].required = false;
     }
 
     // define properties from schema
     Object.keys(this._properties).forEach(function(k) {
-      resourceful.defineProperty(self, k, Factory.schema.properties[k]);
+      persistence.defineProperty(self, k, Factory.properties[k]);
     });
 
-    return instance;
+    return this;
   }
+
+  // prototype inheritance
+  Factory.__proto__ = persistence.SchemaInstance;
+  Factory.prototype.__proto__ = persistence.SchemaInstance.prototype;
 
   // define the properties that each schema must have
 
@@ -65,11 +90,7 @@ persistence.define = function(name, schema) {
   Factory.name = name;
 
   // set schema
-  Factory.schema = schema;
-
-  // prototype inheritance
-  Factory.__proto__ = persistence.SchemaInstance;
-  Factory.prototype.__proto__ = persistence.SchemaInstance.prototype
+  Factory.define(schema);
 
   // define some hooks
   Factory.hooks = {
@@ -85,13 +106,30 @@ persistence.define = function(name, schema) {
 
   Factory.emitter = new events.EventEmitter();
 
-  // register hooks with event emitter
+  // register emitter methods with factory
   Object.keys(events.EventEmitter.prototype).forEach(function(k) {
     Factory[k] = function() {
       return Factory.emitter[k].apply(Factory.emitter, arguments);
     };
   });
 
+  /**
+   * Emits 'init'.
+   */
+  Factory.init = function() {
+    this.emit('init', this);
+  };
+
+  /**
+   * Creates a new instance.
+   */
+  Factory.create = function(attrs, callback) {
+    var instance = new (this)(attrs);
+
+    var validate = persistence.SchemaInstance.validate(instance, this.schema);
+  };
+
+  Factory.define(schema);
   // emit 'init' event
   Factory.init();
 
@@ -140,5 +178,41 @@ persistence.instantiate = function(obj) {
     }
   } else {
     throw new Error("unrecognised resource '" + obj.name + "'");
+  }
+};
+
+/**
+ * Define a property on the Schema.
+ */
+persistence.defineProperty = function(obj, property, schema) {
+  schema = schema || {};
+
+  // Call setter if needed
+  if (schema.set) {
+    obj.writeProperty(property, obj.readProperty(property), schema.set);
+  }
+
+  // Sanitize defaults and per-creation properties
+  if (schema.sanitize) {
+    var val = obj.readProperty(property);
+    if (val !== undefined) {
+      obj.writeProperty(property, schema.sanitize(val));
+    }
+  }
+
+  Object.defineProperty(obj, property, {
+    get : function() {
+      return this.readProperty(property, schema.get);
+    },
+    set : schema.sanitize ? (function(val) {
+      return this.writeProperty(property, schema.sanitize(val), schema.set);
+    }) : (function(val) {
+      return this.writeProperty(property, val, schema.set);
+    }),
+    enumerable : true
+  });
+
+  if (typeof obj[property] === 'undefined') {
+    obj[property] = init(obj, property, schema);
   }
 };

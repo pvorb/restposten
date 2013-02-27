@@ -1,12 +1,13 @@
 'use strict';
 
-var validator = require('./main').validator;
+var append = require('append');
 
-var SchemaInstance = exports.SchemaInstance = function SchemaInstance(attrs) {
-  // set attributes
-  Object.defineProperty(this, '_properties', {
-    value : attrs,
-    enumerable : false
+var persistence = require('..')
+
+var SchemaInstance = exports.SchemaInstance = function() {
+  Object.defineProperty(this, 'isNewRecord', {
+    value : true,
+    writable : true
   });
 
   // init local schema
@@ -17,20 +18,47 @@ var SchemaInstance = exports.SchemaInstance = function SchemaInstance(attrs) {
   });
 };
 
-/**
- * Emits 'init'.
- */
-SchemaInstance.init = function() {
-  this.emit('init', this);
-}
+// set initial schema
+SchemaInstance._schema = {
+  properties : {}
+};
 
 /**
- * Creates a new instance.
+ * Returns the schema's definition.
  */
-SchemaInstance.create = function(attrs, callback) {
-  var instance = new (this)(attrs);
+SchemaInstance.__defineGetter__('schema', function() {
+  return this._schema;
+});
 
-  var validate = SchemaInstance.validate(instance, this.schema);
+/**
+ * Returns the schema's properties.
+ */
+SchemaInstance.__defineGetter__('properties', function() {
+  return this.schema.properties || {};
+});
+
+//Define getter / setter for name property
+SchemaInstance.__defineGetter__('name', function() {
+return this._name;
+});
+SchemaInstance.__defineSetter__('name', function(name) {
+return this._name = name;
+});
+
+//Define getter / setter for key property. The key property should be defined
+//for all engines.
+SchemaInstance.__defineGetter__('key', function() {
+return this._key || persistence.key || 'id';
+});
+SchemaInstance.__defineSetter__('key', function(val) {
+return this._key = val;
+});
+
+/**
+ * Define the schema.
+ */
+SchemaInstance.define = function(schema) {
+  return append(this._schema, schema);
 };
 
 /**
@@ -138,27 +166,15 @@ SchemaInstance.update = function(id, obj, callback) {
   }) : callback && callback(new Error('key is undefined'));
 };
 
-// Define getter / setter for resource property
-SchemaInstance.__defineGetter__('name', function() {
-  return this._name;
-});
-SchemaInstance.__defineSetter__('name', function(name) {
-  return this._name = name;
-});
+SchemaInstance.prototype.readProperty = function (k, getter) {
+  return getter ? getter.call(this, this._properties[k]) : this._properties[k];
+};
 
-// Define getter for properties, wraps this resources schema properties
-SchemaInstance.__defineGetter__('schema', function() {
-  return this.schema.properties;
-});
-
-// Define getter / setter for key property. The key property should be defined
-// for all engines
-SchemaInstance.__defineGetter__('key', function() {
-  return this._key || resourceful.key || 'id';
-});
-SchemaInstance.__defineSetter__('key', function(val) {
-  return this._key = val;
-});
+SchemaInstance.prototype.writeProperty = function (k, val, setter) {
+  return this._properties[k] = setter
+    ? setter.call(this, val)
+    : val;
+};
 
 // Hooks
 SchemaInstance.after = function(event, callback) {
