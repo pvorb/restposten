@@ -77,4 +77,4 @@ Maintainers
 License
 -------
 
-[MIT License](License.txt)
+[Apache 2.0 License](License.txt)
