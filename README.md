@@ -14,11 +14,33 @@ Installation
 
     npm install persistence
 
+You also have to provide a database engine, a cache and a JSON Schema validator.
+
+Currently, there are two database engines:
+[persistence-mongodb](https://github.com/n-fuse/persistence-mongodb) and
+[persistence-memory](https://github.com/n-fuse/persistence-memory) (a in-memory
+database for testing purposes).
+
+    npm install persistence-mongodb
+
+or
+
+    npm install persistence-memory
+
+The recommended cache is
+[persistence-cache](https://github.com/n-fuse/persistence-cache) and the
+recommended schema validator is
+[JaySchema](https://github.com/natesilva/jayschema).
+
+    npm install persistence-cache jayschema
+
 
 Usage
 -----
 
 ### Simple example
+
+[outdated]
 
 ``` javascript
 var persistence = require('persistence');
