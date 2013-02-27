@@ -19,7 +19,8 @@
 	},
 	"dependencies": {
 	   "append": "~0.1.1",
-	   "clone": "~0.1.5"
+	   "clone": "~0.1.5",
+	   "errs": "~0.2.3"
 	},
 	"devDependencies": {
 		"mocha": "*",
