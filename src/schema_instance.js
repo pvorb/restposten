@@ -55,6 +55,24 @@ return this._key = val;
 });
 
 /**
+ * Emits 'init'.
+ */
+SchemaInstance.init = function() {
+  this.emit('init', this);
+};
+
+/**
+ * Creates a new instance.
+ */
+SchemaInstance.create = function(attrs, callback) {
+  var instance = new (this)(attrs);
+
+  if (typeof persistence.validator == 'undefined')
+    throw new Error('No validator set.');
+  var validate = persistence.validator.validate(instance, this.schema);
+};
+
+/**
  * Define the schema.
  */
 SchemaInstance.define = function(schema) {

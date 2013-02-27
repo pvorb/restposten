@@ -1,20 +1,24 @@
 var persistence = require('../');
 var memory = require('persistence-memory');
+var JaySchema = require('jayschema');
 
-memory.connect(function (err, engine) {
+var validator = new JaySchema();
+
+memory.connect(function(err, engine) {
   persistence.engine = engine;
+  persistence.validator = validator;
 
   var Author = persistence.define('author', {
-    "properties": {
-      "id": {
-        "type": "string"
+    "properties" : {
+      "id" : {
+        "type" : "string"
       }
     }
   });
 
   Author.create({
-    id: 'Paul'
-  }, function(err, marak){
+    id : 'Paul'
+  }, function(err, marak) {
     console.log(marak);
   });
 });

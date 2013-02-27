@@ -6,16 +6,16 @@ var persistence = exports;
 persistence.SchemaInstance = require('./schema_instance').SchemaInstance;
 persistence.schemas = {};
 
-persistence._validator = null;
-persistence._engine = null;
+persistence.validator;
+persistence._engine;
 
-persistence.__defineSetter__('validator', function(validator) {
-  return this._validator = validator;
+/*persistence.__defineSetter__('validator', function(validator) {
+  return persistence._validator = validator;
 });
 
 persistence.__defineGetter__('validator', function() {
-  return this._validator;
-});
+  return persistence._validator;
+});*/
 
 persistence.__defineSetter__('engine', function(engine) {
   return persistence._engine = engine;
@@ -112,22 +112,6 @@ persistence.define = function(name, schema) {
       return Factory.emitter[k].apply(Factory.emitter, arguments);
     };
   });
-
-  /**
-   * Emits 'init'.
-   */
-  Factory.init = function() {
-    this.emit('init', this);
-  };
-
-  /**
-   * Creates a new instance.
-   */
-  Factory.create = function(attrs, callback) {
-    var instance = new (this)(attrs);
-
-    var validate = persistence.SchemaInstance.validate(instance, this.schema);
-  };
 
   Factory.define(schema);
   // emit 'init' event
