@@ -1,6 +1,7 @@
 'use strict';
 
 var append = require('append');
+var errs = require('errs');
 
 var persistence = require('..')
 
@@ -37,21 +38,30 @@ SchemaInstance.__defineGetter__('properties', function() {
   return this.schema.properties || {};
 });
 
-//Define getter / setter for name property
+// getter / setter for name property
 SchemaInstance.__defineGetter__('name', function() {
-return this._name;
+  return this._name;
 });
 SchemaInstance.__defineSetter__('name', function(name) {
-return this._name = name;
+  return this._name = name;
 });
 
-//Define getter / setter for key property. The key property should be defined
-//for all engines.
+// getter / setter for key property. The key property should be defined for all
+// engines.
 SchemaInstance.__defineGetter__('key', function() {
-return this._key || persistence.key || 'id';
+  return this._key || persistence.key || 'id';
 });
 SchemaInstance.__defineSetter__('key', function(val) {
-return this._key = val;
+  return this._key = val;
+});
+
+// Define getter / setter for connection property
+Resource.__defineGetter__('connection', function () {
+  return this._connection || resourceful.connection;
+});
+
+Resource.__defineSetter__('connection', function (val) {
+  return this._connection = val;
 });
 
 /**
@@ -66,10 +76,44 @@ SchemaInstance.init = function() {
  */
 SchemaInstance.create = function(attrs, callback) {
   var instance = new (this)(attrs);
+  var that = this;
 
   if (typeof persistence.validator == 'undefined')
     throw new Error('No validator set.');
-  var validate = persistence.validator.validate(instance, this.schema);
+
+  var e = persistence.validator.validate(instance, this.schema);
+  var invalid = e.length > 0;
+  if (invalid) {
+    var opts = { errors: e, value: attrs, schema: this.schema };
+    var error = errs.create('ValidationError', opts);
+    this.emit('error', error));
+    
+    if (callback)
+      callback(error);
+    
+    return;
+  }
+  
+  var key = this.key;
+  var oldid = instance[key];
+  this.runBeforeHooks('create', instance, callback, function(err, result) {
+    if (invalid) {
+      that.emit('error', err);
+      if (callback)
+        callback(e);
+      return;
+    }
+    
+    that.runAfterHooks('create', null, instance, function (err, res) {
+      if (err)
+        return that.emit('error', err);
+      
+      instance.save(err, res) {
+        if (callback)
+          callback(err, res);
+      }
+    });
+  });
 };
 
 /**
@@ -87,36 +131,96 @@ SchemaInstance.prototype.validate = function() {
 };
 
 /**
+ * Handle a request.
+ */
+Resource._request = function (/* method, [id, obj], callback */) {
+  var args     = Array.prototype.slice.call(arguments);
+  var that     = this;
+  var key      = this.key;
+  var callback = args.pop();
+  var method   = args.shift();
+  var id       = args.shift();
+  var obj      = args.shift();
+
+  if (id) args.push(id);
+  if (obj) args.push(obj.properties ? obj.properties : obj);
+  else {
+    obj = that.connection.cache.get(id) || {};
+    obj[key] = id;
+  }
+
+  this.runBeforeHooks(method, obj, callback, function () {
+    args.push(function (e, result) {
+      if (e) {
+        if (e.status >= 500) {
+          throw new(Error)(e);
+        } else {
+          that.runAfterHooks(method, e, obj, function () {
+            that.emit('error', e, obj);
+            if (callback)
+              callback(e);
+          });
+        }
+      } else {
+        if (Array.isArray(result)) {
+          result = result.map(function (r) {
+            return r ? resourceful.instantiate.call(that, r) : r;
+          });
+        } else {
+          if (method === 'destroy') {
+            that.connection.cache.clear(id);
+          } else {
+            that.connection.cache.put(result[key], result);
+            result = resourceful.instantiate.call(that, result);
+          }
+        }
+
+        that.runAfterHooks(method, null, result, function (e, res) {
+          if (e) { that.emit('error', e); }
+          else   { that.emit(method, res || result); }
+          if (callback) {
+            callback(e || null, result);
+          }
+        });
+      }
+    });
+    that.connection[method].apply(that.connection, args);
+  });
+};
+
+/**
  * Saves the instance.
  * 
  * TODO adjust
  */
 SchemaInstance.prototype.save = function(callback) {
-  var errs = this.validate();
-  // if there are errors
-  if (errs.length > 0) {
-    var result = {
-      errors : errs,
+  var self = this;
+  var errors = this.validate();
+  
+  // if there are errors, callback
+  if (errors.length > 0 && callback) {
+    var err = errors.create('ValidationError', {
+      errors : errors,
       value : this,
       schema : this.schema
-    };
+    });
 
-    return callback && callback(result);
+    return callback(err);
   }
 
-  var now = new Date();
-  this.modified = now;
-  if (this.isNewRecord)
-    this.created = now;
-
-  var key = this.key;
-
+  this.constructor.save(this, function(err, res) {
+    if (!err)
+      this.isNewRecord = false;
+    
+    if (callback)
+      callback(err, res);
+  })
 };
 
 /**
  * TODO adjust
  */
-SchemaInstance.destroy = function(id, callback) {
+SchemaInstance.delete = function(id, callback) {
   var key = this.key;
 
   if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
@@ -184,14 +288,12 @@ SchemaInstance.update = function(id, obj, callback) {
   }) : callback && callback(new Error('key is undefined'));
 };
 
-SchemaInstance.prototype.readProperty = function (k, getter) {
+SchemaInstance.prototype.readProperty = function(k, getter) {
   return getter ? getter.call(this, this._properties[k]) : this._properties[k];
 };
 
-SchemaInstance.prototype.writeProperty = function (k, val, setter) {
-  return this._properties[k] = setter
-    ? setter.call(this, val)
-    : val;
+SchemaInstance.prototype.writeProperty = function(k, val, setter) {
+  return this._properties[k] = setter ? setter.call(this, val) : val;
 };
 
 // Hooks
