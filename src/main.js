@@ -183,7 +183,35 @@ SchemaInstance.create = function(attrs, callback) {
  * Define the schema.
  */
 SchemaInstance.define = function(schema) {
-  return append(this._schema, schema);
+  var extended = append(this._schema, schema);
+  
+  // go through the schema's properties and check for links with "rel": "full"
+  var props = extended.properties;
+  var keys = Object.keys(props);
+  var property;
+  var lenLinks;
+  var links, link;
+  var i;
+  
+  Object.keys(props).forEach(function (key) {
+    property = props[key];
+    if (typeof property.links == 'undefined')
+      return;
+    
+    links = property.links;
+    lenLinks = links.length;
+    for (i = 0; i < lenLinks; i++) {
+      link = links[i];
+      if (link.rel === 'full')
+        this.foreignKey(key, link.href);
+    }
+  });
+  
+  return extended;
+};
+
+SchemaInstance.foreignKey = function (propertyName, href) {
+  console.log(this.resource, 'contains a link to', href);
 };
 
 /**
