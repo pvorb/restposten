@@ -8,7 +8,7 @@
 		"email": "info@n-fuse.de"
 	},
 	"maintainers": ["Paul Vorbach <paul@vorb.de>"],
-	"main": "./src/index.js",
+	"main": "./src/main.js",
 	"homepage": "http://www.invend.eu",
 	"bugs": {
 		"url": "https://github.com/n-fuse/persistence/issues"
