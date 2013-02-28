@@ -3,14 +3,18 @@
 var events = require('events');
 var append = require('append');
 var errs = require('errs');
+var utile = require('utile');
+var pluralize = require('i')().pluralize;
 var errors = require('./errors.js');
 
 var persistence = exports;
 persistence.schemas = {};
+persistence.deferredRelationships = {};
 
 persistence._validator;
 persistence._engine;
 
+// getter / setter for validator
 persistence.__defineSetter__('validator', function(validator) {
   return persistence._validator = validator;
 });
@@ -19,6 +23,7 @@ persistence.__defineGetter__('validator', function() {
   return persistence._validator;
 });
 
+// getter / setter for engine
 persistence.__defineSetter__('engine', function(engine) {
   return persistence._engine = engine;
 });
@@ -27,6 +32,9 @@ persistence.__defineGetter__('engine', function() {
   return persistence._engine;
 });
 
+/**
+ * SchemaInstance constructor.
+ */
 var SchemaInstance = persistence.SchemaInstance = function() {
   Object.defineProperty(this, 'isNewRecord', {
     value : true,
@@ -77,7 +85,7 @@ SchemaInstance.__defineSetter__('key', function(val) {
   return this._key = val;
 });
 
-// Define getter / setter for connection property
+// getter / setter for connection property
 SchemaInstance.__defineGetter__('connection', function () {
   return this._connection || persistence.connection;
 });
@@ -122,7 +130,7 @@ SchemaInstance.save = function (obj, callback) {
     oldid = resourceful.uuid.v4();
   }
 
-  newid = this.resource + '/' + oldid;
+  newid = pluralize(this.resource) + '/' + oldid;
   obj[key] = newid;
 
   return this._request("save", newid, obj, function(err, res){
@@ -183,6 +191,7 @@ SchemaInstance.create = function(attrs, callback) {
  * Define the schema.
  */
 SchemaInstance.define = function(schema) {
+  console.log('call');
   var extended = append(this._schema, schema);
   var that = this;
   
@@ -204,15 +213,62 @@ SchemaInstance.define = function(schema) {
     for (i = 0; i < lenLinks; i++) {
       link = links[i];
       if (link.rel === 'full')
-        that.foreignKey(key, link.href);
+        foreignKey(that, key, link.href);
     }
   });
   
   return extended;
 };
 
-SchemaInstance.foreignKey = function (propertyName, href) {
-  console.log(this.resource, 'contains a link to', href);
+/**
+ * Creates a foreign key relationship. (One-To-Many)
+ * 
+ * TODO remove logs
+ */
+function foreignKey(from, propertyName, href) {
+  var components = href.split('/');
+
+  // this method will only work for standard values like href = 'author/{@}'
+  if (components.length != 2 && components[1] !== "{@}")
+    return;
+
+  var otherSchema = components[0];
+
+  // if other schema is not yet defined, defer relationship
+  if (typeof persistence.schemas[otherSchema] == 'undefined') {
+    var rel = {
+      schema: from,
+      property: propertyName
+    };
+    
+    if (typeof persistence.deferredRelationships[otherSchema] == 'undefined')
+      persistence.deferredRelationships[otherSchema] = [rel];
+    else
+      persistence.deferredRelationships[otherSchema].push(rel);
+    
+    return;
+  }
+
+  var getAll = 'get' + utile.capitalize(pluralize(from.resource));
+  console.log(otherSchema + '.' + getAll);
+  
+  // define function to get the referenced collection
+  // e.g. getBooks()
+  var other = persistence.schemas[otherSchema];
+  other.prototype[getAll] = function(callback) {
+    var query = {};
+    query[propertyName] = this.id;
+    from.get(query, callback);
+  };
+  
+  var getOne = 'get' + utile.capitalize(otherSchema);
+  console.log(from.resource + '.' + getOne);
+  
+  // define function to get the referenced document
+  // e.g. getAuthor()
+  from.prototype[getOne] = function(callback) {
+    other.get(this[propertyName], callback);
+  }
 };
 
 /**
@@ -282,6 +338,61 @@ SchemaInstance._request = function (/* method, [id, obj], callback */) {
 };
 
 /**
+ * Get the instance with the specified id.
+ */
+SchemaInstance.get = function (id, callback) {
+  var key = this.key;
+
+  if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
+    id = this.schema.properties[key].sanitize(id);
+  }
+
+  var plural = pluralize(this.resource);
+  var newid, oldid;
+  if (id && id[key]) {
+    newid = plural + "/" + id[key];
+    oldid = id[key];
+  }
+  else if(Array.isArray(id)) {
+    for(var i in id) {
+      id[i] = plural + "/" + id[i];
+    }
+    newid = id;
+  }
+  else if(id) {
+    newid = plural + "/" + id;
+    oldid = id;
+  }
+  else {
+    if(callback) {
+      return callback(new Error('key is undefined'));
+    }
+    return;
+  }
+
+  this._request('get', newid, function(err, res){
+    //
+    // Remap back original ids
+    //
+    if(res && typeof res[key] !== 'undefined') {
+      res[key] = oldid;
+    }
+    if(Array.isArray(res)) {
+      for(var r in res) {
+        if (res[r] && res[r][key]) {
+          res[r][key] = res[r][key].split('/').slice(1).join('/')
+        }
+      }
+    }
+    if(res) {
+      callback(err, res);
+    } else {
+      return callback(err, res)
+    }
+  });
+};
+
+/**
  * Saves the instance.
  */
 SchemaInstance.prototype.save = function(callback) {
@@ -309,7 +420,7 @@ SchemaInstance.prototype.save = function(callback) {
 };
 
 /**
- * TODO adjust
+ * Deletes the instance.
  */
 SchemaInstance.delete = function(id, callback) {
   var key = this.key;
@@ -318,13 +429,15 @@ SchemaInstance.delete = function(id, callback) {
     id = this.schema.properties[key].sanitize(id);
   }
 
-  var newid = this.resource + "/" + id;
+  var newid = pluralize(this.resource) + "/" + id;
 
   return newid ? this._request('destroy', newid, callback) : callback
       && callback(new Error('key is undefined'));
 };
 
 /**
+ * Overwrites the instance.
+ * 
  * TODO adjust
  */
 SchemaInstance.update = function(id, obj, callback) {
@@ -366,7 +479,7 @@ SchemaInstance.update = function(id, obj, callback) {
     return;
   }
 
-  var newid = this.resource + "/" + id, oldid = id;
+  var newid = pluralize(this.resource) + "/" + id, oldid = id;
   obj[key] = newid;
   obj.resource = this._resource;
 
@@ -550,8 +663,7 @@ persistence.define = function(name, schema) {
       return Factory.emitter[k].apply(Factory.emitter, arguments);
     };
   });
-
-  Factory.define(schema);
+  
   // emit 'init' event
   Factory.init();
 
