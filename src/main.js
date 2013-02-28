@@ -184,6 +184,7 @@ SchemaInstance.create = function(attrs, callback) {
  */
 SchemaInstance.define = function(schema) {
   var extended = append(this._schema, schema);
+  var that = this;
   
   // go through the schema's properties and check for links with "rel": "full"
   var props = extended.properties;
@@ -203,7 +204,7 @@ SchemaInstance.define = function(schema) {
     for (i = 0; i < lenLinks; i++) {
       link = links[i];
       if (link.rel === 'full')
-        this.foreignKey(key, link.href);
+        that.foreignKey(key, link.href);
     }
   });
   
