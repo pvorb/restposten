@@ -15,13 +15,35 @@ memory.connect(function(err, engine) {
       }
     }
   });
+  
+  var Book = persistence.define('book', {
+    "properties" : {
+      "id": {
+        "type": "string"
+      },
+      "author": {
+        "type": "string",
+        "links": [{ "rel": "full", "href": "author/{@}" }]
+      }
+    }
+  });
 
   Author.create({
-    id : 'pvorb'
+    "id" : "pvorb"
   }, function(err, author) {
     if (err)
       throw err;
 
-    console.log(author.id);
+    console.log(author.id, 'created');
+  });
+  
+  Book.create({
+    "id": "some-book",
+    "author": "pvorb"
+  }, function(err, book) {
+    if (err)
+      throw err;
+    
+    console.log(book.id, 'created');
   });
 });
