@@ -250,7 +250,6 @@ function foreignKey(from, propertyName, href) {
   }
 
   var getAll = 'get' + utile.capitalize(pluralize(from.resource));
-  console.log(otherSchema + '.' + getAll);
   
   // define function to get the referenced collection
   // e.g. getBooks()
@@ -262,7 +261,6 @@ function foreignKey(from, propertyName, href) {
   };
   
   var getOne = 'get' + utile.capitalize(otherSchema);
-  console.log(from.resource + '.' + getOne);
   
   // define function to get the referenced document
   // e.g. getAuthor()
@@ -281,17 +279,11 @@ SchemaInstance.prototype.validate = function() {
 /**
  * Handle a request.
  */
-SchemaInstance._request = function (/* method, [id, obj], callback */) {
-  var args     = Array.prototype.slice.call(arguments);
-  var that     = this;
-  var key      = this.key;
-  var callback = args.pop();
-  var method   = args.shift();
-  var id       = args.shift();
-  var obj      = args.shift();
+SchemaInstance._request = function (method, query, callback) {
 
   if (id) args.push(id);
-  if (obj) args.push(obj.properties ? obj.properties : obj);
+  if (obj)
+    args.push(obj.properties ? obj.properties : obj);
   else {
     obj = that.connection.cache.get(id) || {};
     obj[key] = id;
@@ -349,6 +341,7 @@ SchemaInstance.get = function (query, callback) {
 
   var plural = pluralize(this.resource);
   var newid, oldid;
+  
   if (query && query[key]) { // if query object
     newid = plural + "/" + query[key];
     oldid = query[key];
