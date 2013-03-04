@@ -340,7 +340,7 @@ SchemaInstance._request = function (/* method, [id, obj], callback */) {
 /**
  * Get the instance with the specified id.
  */
-SchemaInstance.get = function (id, callback) {
+SchemaInstance.get = function (query, callback) {
   var key = this.key;
 
   if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
@@ -349,22 +349,19 @@ SchemaInstance.get = function (id, callback) {
 
   var plural = pluralize(this.resource);
   var newid, oldid;
-  if (id && id[key]) {
-    newid = plural + "/" + id[key];
-    oldid = id[key];
-  }
-  else if(Array.isArray(id)) {
-    for(var i in id) {
-      id[i] = plural + "/" + id[i];
+  if (query && query[key]) { // if query object
+    newid = plural + "/" + query[key];
+    oldid = query[key];
+  } else if(Array.isArray(query)) { // if array
+    for(var i in query) {
+      query[i] = plural + "/" + query[i];
     }
-    newid = id;
-  }
-  else if(id) {
-    newid = plural + "/" + id;
-    oldid = id;
-  }
-  else {
-    if(callback) {
+    newid = query;
+  } else if (typeof query == 'string') { // if string
+    newid = plural + "/" + query;
+    oldid = query;
+  } else {
+    if (callback) {
       return callback(new Error('key is undefined'));
     }
     return;
