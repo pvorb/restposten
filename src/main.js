@@ -58,6 +58,7 @@ persistence.__defineGetter__('engine', function() {
 var SchemaInstance = persistence.SchemaInstance = function SchemaInstance() {
   Object.defineProperty(this, 'isNewRecord', {
     value : true,
+    enumerable: false,
     writable : true
   });
 
@@ -92,15 +93,6 @@ SchemaInstance.__defineGetter__('resource', function() {
 });
 SchemaInstance.__defineSetter__('resource', function(resource) {
   return this._resource = resource;
-});
-
-// getter / setter for key property. The key property should be defined for all
-// engines.
-SchemaInstance.__defineGetter__('key', function() {
-  return this._key || persistence.key || 'id';
-});
-SchemaInstance.__defineSetter__('key', function(val) {
-  return this._key = val;
 });
 
 // getter / setter for connection property
@@ -360,52 +352,11 @@ SchemaInstance.get = function (query, options, callback) {
     options = {};
   }
   
-  var key = this.key;
-
-  if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
-    id = this.schema.properties[key].sanitize(id);
-  }
-
-  var plural = pluralize(this.resource);
-  var newid, oldid;
-  
-  if (query && query[key]) { // if query object
-    newid = plural + "/" + query[key];
-    oldid = query[key];
-  } else if(Array.isArray(query)) { // if array
-    for(var i in query) {
-      query[i] = plural + "/" + query[i];
-    }
-    newid = query;
-  } else if (typeof query == 'string') { // if string
-    newid = plural + "/" + query;
-    oldid = query;
-  } else {
-    if (callback) {
-      return callback(new Error('key is undefined'));
-    }
-    return;
-  }
-
-  this._request('get', newid, function(err, res){
-    //
-    // Remap back original ids
-    //
-    if(res && typeof res[key] !== 'undefined') {
-      res[key] = oldid;
-    }
-    if(Array.isArray(res)) {
-      for(var r in res) {
-        if (res[r] && res[r][key]) {
-          res[r][key] = res[r][key].split('/').slice(1).join('/')
-        }
-      }
-    }
-    if(res) {
-      callback(err, res);
-    } else {
-      return callback(err, res)
-    }
+  persistence.engine.getCollection(this.resource, function(err, coll) {
+    if (err)
+      return callback(err);
+    
+    coll.find(query, options, callback);
   });
 };
 
@@ -632,7 +583,7 @@ persistence.define = function(name, schema) {
     this._properties.resource = name;
 
     // verify methods
-    for ( var m in Factory) {
+    for (var m in Factory) {
       if (typeof Factory[m] != 'undefined' && Factory[m].type === 'method') {
         if (typeof this[m] != 'undefined')
           throw new Error(m + ' is a reserverd word on the schema instance');
