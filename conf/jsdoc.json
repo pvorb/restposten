@@ -1,0 +1,10 @@
+{
+  "source": {
+    "include": [ "./README.md", "./src" ]
+  },
+  "plugins": [ "plugins/markdown" ],
+  "opts": {
+     "recurse": true,
+     "destination": "../persistence-pages/" 
+  }
+}
