@@ -27,9 +27,7 @@ or
 
     npm install persistence-memory
 
-The recommended cache is
-[persistence-cache](https://github.com/n-fuse/persistence-cache) and the
-recommended schema validator is
+The recommended schema validator is
 [JaySchema](https://github.com/natesilva/jayschema).
 
     npm install persistence-cache jayschema
@@ -40,9 +38,14 @@ Usage
 
 ### Simple example
 
+This example uses _persistence-mongodb_ and _jayschema_.
+
 ~~~ javascript
 var persistence = require('persistence');
 var mongo = require('persistence-mongodb');
+var validator = new JaySchema();
+
+persistence.validator = new JaySchema();
 
 mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
   if (err)
