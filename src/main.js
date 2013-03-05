@@ -344,7 +344,14 @@ SchemaInstance._request = function (method, query, callback) {
 };
 
 /**
- * Get the instance with the specified id.
+ * Get an array of matching instances.
+ * 
+ * @param {Object}
+ *            query query object that all resulting instances match
+ * @param {Object}
+ *            [options]
+ * @param {Function(err,
+ *            coll)} callback
  */
 SchemaInstance.get = function (query, options, callback) {
   if (arguments.length == 2) {
