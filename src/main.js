@@ -3,8 +3,9 @@
 var events = require('events');
 var append = require('append');
 var errs = require('errs');
-var utile = require('utile');
-var pluralize = require('i')().pluralize;
+var inflection = require('i')();
+var pluralize = inflection.pluralize;
+var camelize = inflection.camelize;
 var errors = require('./errors.js');
 
 var persistence = exports;
@@ -249,7 +250,7 @@ function foreignKey(from, propertyName, href) {
     return;
   }
 
-  var getAll = 'get' + utile.capitalize(pluralize(from.resource));
+  var getAll = 'get' + camelize(pluralize(from.resource)));
   
   // define function to get the referenced collection
   // e.g. getBooks()
@@ -260,7 +261,7 @@ function foreignKey(from, propertyName, href) {
     from.get(query, callback);
   };
   
-  var getOne = 'get' + utile.capitalize(otherSchema);
+  var getOne = 'get' + camelize(otherSchema);
   
   // define function to get the referenced document
   // e.g. getAuthor()
