@@ -295,6 +295,7 @@ SchemaInstance.prototype.validate = function() {
  * Handle a request.
  * 
  * @private
+ * @deprecated
  */
 SchemaInstance._request = function (method, query, callback) {
 
@@ -349,7 +350,12 @@ SchemaInstance._request = function (method, query, callback) {
 /**
  * Get the instance with the specified id.
  */
-SchemaInstance.get = function (query, callback) {
+SchemaInstance.get = function (query, options, callback) {
+  if (arguments.length == 2) {
+    callback = options;
+    options = {};
+  }
+  
   var key = this.key;
 
   if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
