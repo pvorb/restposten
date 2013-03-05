@@ -21,15 +21,11 @@ mem.connect({
     _id : 'pvorb',
     name : 'Paul'
   }, function(err, pvorb) {
-    //
     // "pvorb" exists already in scope from the create
-    //
-    console.log(pvorb);
-    //
+
     // We can also re-fetch the resource
-    //
     Author.get({
-      '_id' : pvorb._id
+      '_id' : 'pvorb'
     }, function(err, result) {
       console.log(err, result);
     });
