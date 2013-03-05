@@ -40,56 +40,60 @@ Usage
 
 ### Simple example
 
-[outdated]
-
-``` javascript
+~~~ javascript
 var persistence = require('persistence');
+var mongo = require('persistence-mongodb');
 
-// Use MongoDB as the persistence engine.
-persistence.useEngine('mongodb');
+mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
 
-// Example schema
-var userSchema = {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "id": "http://example.org/api/v1/user.schema.json",
-  "title": "user",
-  "description": "System user",
-  "required": [ "id", "email" ],
-  "properties": {
-    "id": {
-      "type": "string"
-    },
-    "name": {
-      "type": "string"
-    },
-    "email": {
-      "type": "string",
-      "format": "email"
+  // Example schema
+  var userSchema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "id": "http://example.org/api/v1/user.schema.json",
+    "title": "user",
+    "description": "System user",
+    "required": [ "id", "email" ],
+    "properties": {
+      "_id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "email": {
+        "type": "string",
+        "format": "email"
+      }
     }
-  }
-};
+  };
 
-// Register a schema for validation.
-// This is only required, if you have schemas that reference each other.
-persistence.validator.register(userSchema);
+  // Register a schema for validation.
+  // This is only required, if you have schemas that reference each other.
+  persistence.validator.register(userSchema);
+  // Define the User resource.
+  var User = persistence.define('user', userSchema);
 
-// Define the User resource.
-var User = persistence.define('user', userSchema);
+  // Create a user, who's missing an email address.
+  User.create({
+    "_id": "pvorb",
+    "name": "Paul Vorbach"
+  }, function (err, u1) {
+    if (err)
+      throw err;
 
-// Create a user, who's missing an email address.
-User.create({
-  "id": "pvorb",
-  "name": "Paul Vorbach"
-}, function (err, u1) {
-  if (err)
-    throw err;
-
-  console.log(u1);
+    console.log(u1);
+  });
 });
-```
+~~~
 
 See [the JSON Schema specification](http://json-schema.org) for more advanced
 examples and further documentation on JSON Schema.
+
+
+TODO
+----
+
+  * Write Unit tests.
 
 
 Maintainers
