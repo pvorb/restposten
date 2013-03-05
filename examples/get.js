@@ -9,6 +9,8 @@ mem.connect({
   if (err)
     throw err;
 
+  persistence.engine = db;
+
   var Author = persistence.define('author', {
     "name" : {
       "type" : "string"
@@ -20,7 +22,7 @@ mem.connect({
     name : 'Paul'
   }, function(err, pvorb) {
     //
-    // "marak" exists already in scope from the create
+    // "pvorb" exists already in scope from the create
     //
     console.log(pvorb);
     //
