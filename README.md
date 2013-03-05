@@ -43,7 +43,7 @@ This example uses _persistence-mongodb_ and _jayschema_.
 ~~~ javascript
 var persistence = require('persistence');
 var mongo = require('persistence-mongodb');
-var validator = new JaySchema();
+var JaySchema = require('jayschema');
 
 persistence.validator = new JaySchema();
 
