@@ -143,7 +143,11 @@ SchemaInstance.save = function (obj, callback) {
   }
   
   var collName = pluralize(this.resource);
-  console.log(collName);
+  
+  // ensure if engine is already set
+  if (typeof persistence.engine == 'undefined')
+    throw errs.create('EngineUndefined');
+  
   persistence.engine.getCollection(collName, function (err, coll) {
     coll.save(obj, callback);
   });
@@ -198,7 +202,7 @@ SchemaInstance.create = function(attrs, callback) {
   var that = this;
 
   if (typeof persistence.validator == 'undefined')
-    throw new Error('No validator set.');
+    throw errs.create('ValidatorUndefined');
 
   var e = persistence.validator.validate(instance, this.schema);
   var invalid = e.length > 0;
