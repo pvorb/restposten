@@ -8,6 +8,17 @@ var pluralize = inflection.pluralize;
 var camelize = inflection.camelize;
 var errors = require('./errors.js');
 
+/**
+ * Persistence is a data persistence module for flatiron. It's an adaptation of
+ * resourceful and is intended to be used as a replacement for Resourceful. It
+ * uses JSON Schema for data validation. It also has support for JSON Schema
+ * links, which are directly mapped to relations in the internal data model.
+ * 
+ * @module persistence
+ * 
+ * @property {Object} engine the persistence engine (must be set on startup)
+ * @property {Object} validator the validator engine (must be set on startup)
+ */
 var persistence = exports;
 persistence.schemas = {};
 persistence.deferredRelationships = {};
@@ -34,9 +45,17 @@ persistence.__defineGetter__('engine', function() {
 });
 
 /**
- * SchemaInstance constructor.
+ * @classdesc Instance of a Schema.
+ * 
+ * @constructor
+ * 
+ * @property {Object} schema [getter]
+ * @property {Object} properties [getter]
+ * @property {String} resource the name of this schema
+ * @property {String} key property that is used as the ID
+ * @property {Object} connection
  */
-var SchemaInstance = persistence.SchemaInstance = function() {
+var SchemaInstance = persistence.SchemaInstance = function SchemaInstance() {
   Object.defineProperty(this, 'isNewRecord', {
     value : true,
     writable : true
@@ -50,21 +69,19 @@ var SchemaInstance = persistence.SchemaInstance = function() {
   });
 };
 
+
 // set initial schema
+/**
+ * @private
+ */
 SchemaInstance._schema = {
   properties : {}
 };
 
-/**
- * Returns the schema's definition.
- */
 SchemaInstance.__defineGetter__('schema', function() {
   return this._schema;
 });
 
-/**
- * Returns the schema's properties.
- */
 SchemaInstance.__defineGetter__('properties', function() {
   return this.schema.properties || {};
 });
@@ -102,97 +119,44 @@ SchemaInstance.init = function() {
   this.emit('init', this);
 };
 
+/**
+ * Saves an object.
+ * 
+ * @param {Object}
+ *            obj object to save
+ * @param {Function(err,
+ *            res)} callback
+ */
 SchemaInstance.save = function (obj, callback) {
-  var key = this.key;
-  var errors = this.prototype.validate(obj, this.schema);
+  var errors = this.prototype.validate(obj, this.schema); // find errors
 
   if (errors.length > 0 && callback) {
-    var error = errs.create('ValidationError', { validate: validate, value: obj,
+    var err = errs.create('ValidationError', { validate: validate, value: obj,
       schema: this.schema });
-    callback(error);
+    return callback(err);
   }
 
-  // update timestamps
-  if (this._ctime || this._mtime) {
-    var now = Date.now();
-    if (this._mtime) {
-      obj.mtime = now;
-    }
-    if (this._ctime && obj.isNewRecord) {
-      obj.ctime = now;
-    }
-  }
-
-  var newid, oldid;
-
-  if (typeof obj !== 'undefined' && obj[key]) {
-    oldid = obj[key];
-  } else {
-    oldid = resourceful.uuid.v4();
-  }
-
-  newid = pluralize(this.resource) + '/' + oldid;
-  obj[key] = newid;
-
-  return this._request("save", newid, obj, function(err, res){
-    if (res && res[key] && typeof oldid !== 'undefined') {
-      res[key] = oldid;
-      obj[key] = oldid;
-    }
-    callback(err, res);
-  });
-};
-
-/**
- * Creates a new instance.
- */
-SchemaInstance.create = function(attrs, callback) {
-  var instance = new (this)(attrs);
-  var that = this;
-
-  if (typeof persistence.validator == 'undefined')
-    throw new Error('No validator set.');
-
-  var e = persistence.validator.validate(instance, this.schema);
-  var invalid = e.length > 0;
-  if (invalid) {
-    var opts = { errors: e, value: attrs, schema: this.schema };
-    var error = errs.create('ValidationError', opts);
-    this.emit('error', error);
-    
-    if (callback)
-      callback(error);
-    
-    return;
+  var now = Date.now();
+  obj.mtime = now;
+  if (obj.isNewRecord) {
+    obj.ctime = now;
   }
   
-  var key = this.key;
-  var oldid = instance[key];
-  this.runBeforeHooks('create', instance, callback, function(err, result) {
-    if (invalid) {
-      that.emit('error', err);
-      if (callback)
-        callback(e);
-      return;
-    }
-    
-    that.runAfterHooks('create', null, instance, function (err, res) {
-      if (err)
-        return that.emit('error', err);
-      
-      instance.save(function (err, res) {
-        if (callback)
-          callback(err, res);
-      });
-    });
+  var collName = pluralize(this.resource);
+  console.log(collName);
+  persistence.engine.getCollection(collName, function (err, coll) {
+    coll.save(obj, callback);
   });
 };
 
 /**
  * Define the schema.
+ * 
+ * @param {Object}
+ *            schema JSON schema definition
+ * @returns {Object} extended schema
  */
 SchemaInstance.define = function(schema) {
-  console.log('call');
   var extended = append(this._schema, schema);
   var that = this;
   
@@ -222,9 +186,59 @@ SchemaInstance.define = function(schema) {
 };
 
 /**
+ * Creates a new instance.
+ * 
+ * @param {Object}
+ *            attrs
+ * @param {Function(err,
+ *            res)} callback
+ */
+SchemaInstance.create = function(attrs, callback) {
+  var instance = new (this)(attrs);
+  var that = this;
+
+  if (typeof persistence.validator == 'undefined')
+    throw new Error('No validator set.');
+
+  var e = persistence.validator.validate(instance, this.schema);
+  var invalid = e.length > 0;
+  if (invalid) {
+    var opts = { errors: e, value: attrs, schema: this.schema };
+    var error = errs.create('ValidationError', opts);
+    this.emit('error', error);
+
+    if (callback)
+      callback(error);
+
+    return;
+  }
+
+  var key = this.key;
+  var oldid = instance[key];
+  this.runBeforeHooks('create', instance, callback, function(err, result) {
+    if (invalid) {
+      that.emit('error', err);
+      if (callback)
+        callback(e);
+      return;
+    }
+
+    that.runAfterHooks('create', null, instance, function (err, res) {
+      if (err)
+        return that.emit('error', err);
+      
+      instance.save(function (err, res) {
+        if (callback)
+          callback(err, res);
+      });
+    });
+  });
+};
+
+/**
  * Creates a foreign key relationship. (One-To-Many)
  * 
- * TODO remove logs
+ * @private
  */
 function foreignKey(from, propertyName, href) {
   var components = href.split('/');
@@ -243,9 +257,9 @@ function foreignKey(from, propertyName, href) {
     };
     
     if (typeof persistence.deferredRelationships[otherSchema] == 'undefined')
-      persistence.deferredRelationships[otherSchema] = [rel];
-    else
-      persistence.deferredRelationships[otherSchema].push(rel);
+      persistence.deferredRelationships[otherSchema] = [];
+    
+    persistence.deferredRelationships[otherSchema].push(rel);
     
     return;
   }
@@ -279,6 +293,8 @@ SchemaInstance.prototype.validate = function() {
 
 /**
  * Handle a request.
+ * 
+ * @private
  */
 SchemaInstance._request = function (method, query, callback) {
 
@@ -412,6 +428,9 @@ SchemaInstance.prototype.save = function(callback) {
 
 /**
  * Deletes the instance.
+ * 
+ * @param id
+ *            id of the instance
  */
 SchemaInstance.delete = function(id, callback) {
   var key = this.key;
@@ -570,10 +589,10 @@ SchemaInstance.runAfterHooks = function(method, e, obj, finish) {
 /**
  * Defines a new factory schema for creating instances of schemas.
  * 
- * @param name
- *            string
- * @param schema
- *            JSON schema object
+ * @param {String}
+ *            name
+ * @param {Object}
+ *            schema JSON schema object
  * @returns factory function for creating new instances
  */
 persistence.define = function(name, schema) {
