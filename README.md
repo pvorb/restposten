@@ -45,6 +45,8 @@ var persistence = require('persistence');
 var mongo = require('persistence-mongodb');
 
 mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
+  if (err)
+    throw err;
 
   // Example schema
   var userSchema = {
@@ -70,10 +72,11 @@ mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
   // Register a schema for validation.
   // This is only required, if you have schemas that reference each other.
   persistence.validator.register(userSchema);
+
   // Define the User resource.
   var User = persistence.define('user', userSchema);
 
-  // Create a user, who's missing an email address.
+  // Create a user, who's missing an email address. This will throw an error.
   User.create({
     "_id": "pvorb",
     "name": "Paul Vorbach"
@@ -88,12 +91,6 @@ mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
 
 See [the JSON Schema specification](http://json-schema.org) for more advanced
 examples and further documentation on JSON Schema.
-
-
-TODO
-----
-
-  * Write Unit tests.
 
 
 Maintainers
