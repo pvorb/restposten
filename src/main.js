@@ -250,7 +250,7 @@ function foreignKey(from, propertyName, href) {
     return;
   }
 
-  var getAll = 'get' + camelize(pluralize(from.resource)));
+  var getAll = 'get' + camelize(pluralize(from.resource));
   
   // define function to get the referenced collection
   // e.g. getBooks()
