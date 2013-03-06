@@ -30,13 +30,15 @@ memory.connect(function(err, engine) {
     }
   });
 
+  // create an author
   Author.create({
     "_id" : "pvorb"
   }, function(err, author) {
     if (err)
       throw err;
-    console.log(author.properties, 'created');
+    console.log(author._id, 'created');
 
+    // create a book
     Book.create({
       "_id" : "some-book",
       "author" : "pvorb"
@@ -44,7 +46,26 @@ memory.connect(function(err, engine) {
       if (err)
         throw err;
 
-      console.log(book.properties, 'created');
+      console.log(book._id, 'created');
+
+      // get the author of this book
+      book.getAuthor(function(err, author) {
+        if (err)
+          throw err;
+
+        console.log(book._id, 'written by', author._id);
+      });
+
+      // get all books from this author
+      author.getBooks(function(err, books) {
+        if (err)
+          throw err;
+
+        console.log(author._id, 'wrote:');
+        books.forEach(function(book) {
+          console.log('  *', book._id);
+        })
+      });
     });
   });
 });
