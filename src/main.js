@@ -5,9 +5,9 @@
  * resourceful and is intended to be used as a replacement for Resourceful. It
  * uses JSON Schema for data validation. It also has support for JSON Schema
  * links, which are directly mapped to relations in the internal data model.
- * 
+ *
  * @module persistence
- * 
+ *
  * @property {Object} engine the persistence engine (must be set on startup)
  * @property {Object} validator the validator engine (must be set on startup)
  * @property {Object} schemas
@@ -48,9 +48,9 @@ exports.__defineGetter__('engine', function() {
 
 /**
  * @classdesc Instance of a Schema.
- * 
+ *
  * @constructor
- * 
+ *
  * @property {Object} schema [getter]
  * @property {Object} properties [getter]
  * @property {String} resource the name of this schema
@@ -108,7 +108,7 @@ SchemaInstance.init = function() {
 
 /**
  * Saves an object.
- * 
+ *
  * @param {Object}
  *            obj object to save
  * @param {Function(err,
@@ -124,11 +124,11 @@ SchemaInstance.save = function (obj, callback) {
   }
 
   var collName = pluralize(this.resource);
-  
+
   // ensure if engine is already set
   if (typeof exports.engine == 'undefined')
     throw errs.create('EngineUndefined');
-  
+
   exports.engine.getCollection(collName, function(err, coll) {
     coll.save(obj, callback);
   });
@@ -136,7 +136,7 @@ SchemaInstance.save = function (obj, callback) {
 
 /**
  * Define the schema.
- * 
+ *
  * @param {Object}
  *            schema JSON schema definition
  * @returns {Object} extended schema
@@ -144,7 +144,7 @@ SchemaInstance.save = function (obj, callback) {
 SchemaInstance.define = function(schema) {
   var extended = append(this._schema, schema);
   var that = this;
-  
+
   // go through the schema's properties and check for links with "rel": "full"
   var props = extended.properties;
   var keys = Object.keys(props);
@@ -152,12 +152,12 @@ SchemaInstance.define = function(schema) {
   var lenLinks;
   var links, link;
   var i;
-  
+
   Object.keys(props).forEach(function (key) {
     property = props[key];
     if (typeof property.links == 'undefined')
       return;
-    
+
     links = property.links;
     lenLinks = links.length;
     for (i = 0; i < lenLinks; i++) {
@@ -166,18 +166,18 @@ SchemaInstance.define = function(schema) {
         foreignKey(that, key, link.href);
     }
   });
-  
+
   return extended;
 };
 
 /**
  * Creates a new instance.
- * 
+ *
  * @param {Object}
  *            attrs
  * @param {Function(err,
  *            res)} callback
- * 
+ *
  * @fires 'error'
  */
 SchemaInstance.create = function(attrs, callback) {
@@ -211,7 +211,7 @@ SchemaInstance.create = function(attrs, callback) {
     that.runAfterHooks('create', null, instance, function (err, res) {
       if (err)
         return that.emit('error', err);
-      
+
       instance.save(callback);
     });
   });
@@ -219,7 +219,7 @@ SchemaInstance.create = function(attrs, callback) {
 
 /**
  * Creates a foreign key relationship. (One-To-Many)
- * 
+ *
  * @private
  */
 function foreignKey(from, propertyName, href) {
@@ -237,17 +237,17 @@ function foreignKey(from, propertyName, href) {
       schema: from,
       property: propertyName
     };
-    
+
     if (typeof exports.deferredRelationships[otherSchema] == 'undefined')
       exports.deferredRelationships[otherSchema] = [];
-    
+
     exports.deferredRelationships[otherSchema].push(rel);
-    
+
     return;
   }
 
   var getAll = 'get' + camelize(pluralize(from.resource));
-  
+
   // define function to get the referenced collection
   // e.g. getBooks()
   var other = exports.schemas[otherSchema];
@@ -255,9 +255,9 @@ function foreignKey(from, propertyName, href) {
     var query = { propertyName: this._id };
     from.get({}, callback);
   };
-  
+
   var getOne = 'get' + camelize(otherSchema);
-  
+
   // define function to get the referenced document
   // e.g. getAuthor()
   from.prototype[getOne] = function(callback) {
@@ -274,7 +274,7 @@ SchemaInstance.prototype.validate = function() {
 
 /**
  * Get an array of matching instances.
- * 
+ *
  * @param {String|Object}
  *            query _id or query object that all resulting instances match
  * @param {Object}
@@ -287,23 +287,23 @@ SchemaInstance.get = function (query, options, callback) {
     callback = options;
     options = {};
   }
-  
+
   var schema = this;
-  
+
   if (typeof query == 'string') {
     query = { _id: query };
   }
-  
+
   var collName = pluralize(this.resource);
-  
+
   exports.engine.getCollection(collName, function(err, coll) {
     if (err)
       return callback(err);
-    
+
     coll.find(query, options, function (err, results) {
       if (err)
         return callback(err);
-      
+
       // instantiate all objects
       var len = results.length;
       for (var i = 0; i < len; i++) {
@@ -316,7 +316,7 @@ SchemaInstance.get = function (query, options, callback) {
 
 /**
  * Get the first matching instance.
- * 
+ *
  * @param {String|Object}
  *            query _id or query object that all resulting instances match
  * @param {Object}
@@ -329,26 +329,26 @@ SchemaInstance.getOne = function (query, options, callback) {
     callback = options;
     options = {};
   }
-  
+
   var schema = this;
-  
+
   if (typeof query == 'string') {
     query = { _id: query };
   }
-  
+
   var collName = pluralize(this.resource);
-  
+
   exports.engine.getCollection(collName, function(err, coll) {
     if (err)
       return callback(err);
-    
+
     coll.findOne(query, options, function (err, result) {
       if (err)
         return callback(err);
-      
+
       // instantiate object
       result = exports.instantiate.call(schema, result);
-      
+
       callback(null, result);
     });
   });
@@ -356,7 +356,7 @@ SchemaInstance.getOne = function (query, options, callback) {
 
 /**
  * Get an array of all instances of the schema.
- * 
+ *
  * @param {Object}
  *            [options]
  * @param {Function(err,
@@ -367,21 +367,21 @@ SchemaInstance.all = function(options, callback) {
     callback = options;
     options = {};
   }
-  
+
   // query all schema instances
   this.get({}, options, callback);
 };
 
 /**
  * Saves the instance.
- * 
+ *
  * @param {Function(err,
  *            res)} callback
  */
 SchemaInstance.prototype.save = function(callback) {
   var self = this;
   var errors = this.validate();
-  
+
   // if there are errors, callback
   if (errors.length > 0 && callback) {
     var err = errors.create('ValidationError', {
@@ -397,7 +397,7 @@ SchemaInstance.prototype.save = function(callback) {
   this.constructor.save(this._properties, function(err, res) {
     if (err)
       return callback(err);
-    
+
     var saved;
     if (typeof res == 'object')
       saved = self;
@@ -410,17 +410,17 @@ SchemaInstance.prototype.save = function(callback) {
 
 /**
  * Deletes the instance.
- * 
+ *
  * @param {String}
  *            id id of the instance
  */
 SchemaInstance.delete = function(id, callback) {
   var collName = pluralize(this.resource);
-  
+
   exports.engine.getCollection(collName, function (err, coll) {
     if (err)
       return callback(err);
-    
+
     coll.delete({ _id: id }, callback);
   });
 };
@@ -449,7 +449,7 @@ SchemaInstance.hook = function(event, timing, callback) {
 
 /**
  * Runs all registered before-hooks for a specific event.
- * 
+ *
  * @param {String}
  *            method
  * @param {Object}
@@ -495,7 +495,7 @@ SchemaInstance.runBeforeHooks = function(method, obj, callback, finish) {
 
 /**
  * Runs all registered after-hooks for a specific event.
- * 
+ *
  * @param {String}
  *            method
  * @param {Error}
@@ -536,7 +536,7 @@ SchemaInstance.runAfterHooks = function(method, err, obj, finish) {
 
 /**
  * Defines a new factory schema for creating instances of schemas.
- * 
+ *
  * @param {String}
  *            name
  * @param {Object}
@@ -626,7 +626,7 @@ exports.define = function(name, schema) {
       return Factory.emitter[k].apply(Factory.emitter, arguments);
     };
   });
-  
+
   // emit 'init' event
   Factory.init();
 
@@ -655,7 +655,7 @@ exports.unregister = function(name) {
  */
 exports.instantiate = function(obj) {
   var Factory = exports.schemas[this.resource];
-  
+
   if (Factory) {
     // Don't instantiate an already instantiated object
     if (obj instanceof Factory) {
@@ -671,7 +671,7 @@ exports.instantiate = function(obj) {
 
 /**
  * Defines a property on the Schema.
- * 
+ *
  * TODO still needed?
  */
 exports.defineProperty = function(obj, property, schema) {
@@ -689,7 +689,7 @@ exports.defineProperty = function(obj, property, schema) {
       obj.writeProperty(property, schema.sanitize(val));
     }
   }
-  
+
   // predefine setter
   var setter;
   if (schema.sanitize) {
