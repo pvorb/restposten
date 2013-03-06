@@ -2,8 +2,8 @@ persistence
 ===========
 
 Persistence is a data persistence module for [flatiron](http://flatironjs.org/).
-It's an adaptation of [resourceful](https://github.com/flatiron/resourceful)
-and is intended to be used as a replacement for Resourceful. It uses [JSON
+It's an adaptation of [resourceful](https://github.com/flatiron/resourceful).
+You can replace resourceful in your flatiron app by persistence. It uses [JSON
 Schema](http://json-schema.org/) for data validation. It also has support for
 JSON Schema links, which are directly mapped to relations in the internal data
 model.
