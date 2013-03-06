@@ -108,4 +108,4 @@ Maintainers
 License
 -------
 
-[Apache 2.0 License](LICENSE.txt)
+[Apache 2.0 License](https://github.com/n-fuse/persistence/tree/master/LICENSE.txt)
