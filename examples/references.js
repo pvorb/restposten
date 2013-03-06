@@ -35,17 +35,16 @@ memory.connect(function(err, engine) {
   }, function(err, author) {
     if (err)
       throw err;
+    console.log(author.properties, 'created');
 
-    console.log(author._id, 'created');
-  });
+    Book.create({
+      "_id" : "some-book",
+      "author" : "pvorb"
+    }, function(err, book) {
+      if (err)
+        throw err;
 
-  Book.create({
-    //"_id" : "some-book",
-    "author" : "pvorb"
-  }, function(err, book) {
-    if (err)
-      throw err;
-
-    console.log(book._id, 'created');
+      console.log(book.properties, 'created');
+    });
   });
 });

@@ -26,8 +26,8 @@ mem.connect({
     // We can also re-fetch the resource
     Author.get({
       '_id' : 'pvorb'
-    }, function(err, result) {
-      console.log(err, result);
+    }, function(err, results) {
+      console.log(err, results[0].properties);
     });
   });
 });
