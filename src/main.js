@@ -592,10 +592,6 @@ exports.unregister = function(name) {
 exports.instantiate = function(obj) {
   var Factory = exports.schemas[this.resource];
   var id = obj[this.key];
-
-  if (id && exports.engine.cache.has(id)) {
-    obj = exports.engine.cache.get(id);
-  }
   
   if (Factory) {
     // Don't instantiate an already instantiated object
