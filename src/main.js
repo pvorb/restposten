@@ -1,13 +1,5 @@
 'use strict';
 
-var events = require('events');
-var append = require('append');
-var errs = require('errs');
-var inflection = require('i')();
-var pluralize = inflection.pluralize;
-var camelize = inflection.camelize;
-var errors = require('./errors.js');
-
 /**
  * Persistence is a data persistence module for flatiron. It's an adaptation of
  * resourceful and is intended to be used as a replacement for Resourceful. It
@@ -19,6 +11,15 @@ var errors = require('./errors.js');
  * @property {Object} engine the persistence engine (must be set on startup)
  * @property {Object} validator the validator engine (must be set on startup)
  */
+
+var events = require('events');
+var append = require('append');
+var errs = require('errs');
+var inflection = require('i')();
+var pluralize = inflection.pluralize;
+var camelize = inflection.camelize;
+var errors = require('./errors.js');
+
 var persistence = exports;
 persistence.schemas = {};
 persistence.deferredRelationships = {};
@@ -652,7 +653,7 @@ persistence.define = function(name, schema) {
     after : {}
   };
 
-  // set before and after hooks
+  // set arrays for before and after hooks
   [ 'get', 'save', 'update', 'create', 'destroy' ].forEach(function(m) {
     Factory.hooks.before[m] = [];
     Factory.hooks.after[m] = [];
@@ -716,7 +717,9 @@ persistence.instantiate = function(obj) {
 };
 
 /**
- * Define a property on the Schema.
+ * Defines a property on the Schema.
+ * 
+ * TODO still needed?
  */
 persistence.defineProperty = function(obj, property, schema) {
   schema = schema || {};
@@ -733,16 +736,25 @@ persistence.defineProperty = function(obj, property, schema) {
       obj.writeProperty(property, schema.sanitize(val));
     }
   }
+  
+  // predefine setter
+  var setter;
+  if (schema.sanitize) {
+    setter = function(val) {
+      return this.writeProperty(property, schema.sanitize(val), schema.set);
+    };
+  } else {
+    setter = function(val) {
+      return this.writeProperty(property, val, schema.set);
+    };
+  }
 
+  // define the property
   Object.defineProperty(obj, property, {
     get : function() {
       return this.readProperty(property, schema.get);
     },
-    set : schema.sanitize ? (function(val) {
-      return this.writeProperty(property, schema.sanitize(val), schema.set);
-    }) : (function(val) {
-      return this.writeProperty(property, val, schema.set);
-    }),
+    set : setter,
     enumerable : true
   });
 
