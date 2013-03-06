@@ -40,57 +40,55 @@ Usage
 
 This example uses _persistence-mongodb_ and _jayschema_.
 
-~~~ javascript
-var persistence = require('persistence');
-var mongo = require('persistence-mongodb');
-var JaySchema = require('jayschema');
-
-persistence.validator = new JaySchema();
-
-mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
-  if (err)
-    throw err;
-
-  // Example schema
-  var userSchema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "id": "http://example.org/api/v1/user.schema.json",
-    "title": "user",
-    "description": "System user",
-    "required": [ "id", "email" ],
-    "properties": {
-      "_id": {
-        "type": "string"
-      },
-      "name": {
-        "type": "string"
-      },
-      "email": {
-        "type": "string",
-        "format": "email"
-      }
-    }
-  };
-
-  // Register a schema for validation.
-  // This is only required, if you have schemas that reference each other.
-  persistence.validator.register(userSchema);
-
-  // Define the User resource.
-  var User = persistence.define('user', userSchema);
-
-  // Create a user, who's missing an email address. This will throw an error.
-  User.create({
-    "_id": "pvorb",
-    "name": "Paul Vorbach"
-  }, function (err, u1) {
-    if (err)
-      throw err;
-
-    console.log(u1);
-  });
-});
-~~~
+    var persistence = require('persistence');
+    var mongo = require('persistence-mongodb');
+    var JaySchema = require('jayschema');
+    
+    persistence.validator = new JaySchema();
+    
+    mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
+      if (err)
+        throw err;
+    
+      // Example schema
+      var userSchema = {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "id": "http://example.org/api/v1/user.schema.json",
+        "title": "user",
+        "description": "System user",
+        "required": [ "id", "email" ],
+        "properties": {
+          "_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        }
+      };
+    
+      // Register a schema for validation.
+      // This is only required, if you have schemas that reference each other.
+      persistence.validator.register(userSchema);
+    
+      // Define the User resource.
+      var User = persistence.define('user', userSchema);
+    
+      // Create a user, who's missing an email address. This will throw an error.
+      User.create({
+        "_id": "pvorb",
+        "name": "Paul Vorbach"
+      }, function (err, u1) {
+        if (err)
+          throw err;
+    
+        console.log(u1);
+      });
+    });
 
 See [the JSON Schema specification](http://json-schema.org) for more advanced
 examples and further documentation on JSON Schema.
@@ -98,7 +96,7 @@ examples and further documentation on JSON Schema.
 
 ### More advanced examples
 
-You can see more advanced examples in [./examples/](https://github.com/n-fuse/persistence/tree/master/examples/).
+You can see more advanced examples in [examples/](https://github.com/n-fuse/persistence/tree/master/examples/).
 
 
 Maintainers
