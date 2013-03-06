@@ -129,7 +129,7 @@ SchemaInstance.save = function (obj, callback) {
   if (typeof exports.engine == 'undefined')
     throw errs.create('EngineUndefined');
   
-  exports.engine.getCollection(collName, function (err, coll) {
+  exports.engine.getCollection(collName, function(err, coll) {
     coll.save(obj, callback);
   });
 };
@@ -212,10 +212,7 @@ SchemaInstance.create = function(attrs, callback) {
       if (err)
         return that.emit('error', err);
       
-      instance.save(function (err, res) {
-        if (callback)
-          callback(err, res);
-      });
+      instance.save(callback);
     });
   });
 };
@@ -255,8 +252,7 @@ function foreignKey(from, propertyName, href) {
   // e.g. getBooks()
   var other = exports.schemas[otherSchema];
   other.prototype[getAll] = function(callback) {
-    var query = {};
-    query[propertyName] = this.id;
+    var query = { _id: this._id };
     from.get(query, callback);
   };
   
@@ -292,6 +288,8 @@ SchemaInstance.get = function (query, options, callback) {
     options = {};
   }
   
+  var schema = this;
+  
   if (typeof query == 'string') {
     query = { _id: query };
   }
@@ -302,7 +300,16 @@ SchemaInstance.get = function (query, options, callback) {
     if (err)
       return callback(err);
     
-    coll.find(query, options, callback);
+    coll.find(query, options, function (err, results) {
+      if (err)
+        return callback(err);
+      
+      var len = results.length;
+      for (var i = 0; i < len; i++) {
+        results[i] = exports.instantiate.call(schema, results[i]);
+      }
+      callback(null, results);
+    });
   });
 };
 
@@ -346,7 +353,18 @@ SchemaInstance.prototype.save = function(callback) {
   }
 
   // call SchemaInstance.save()
-  this.constructor.save(this._properties, callback);
+  this.constructor.save(this._properties, function(err, res) {
+    if (err)
+      return callback(err);
+    
+    var saved;
+    if (typeof res == 'object')
+      saved = self;
+    else
+      saved = res;
+
+    callback(null, saved);
+  });
 };
 
 /**
@@ -534,6 +552,11 @@ exports.define = function(name, schema) {
   Factory.__proto__ = exports.SchemaInstance;
   Factory.prototype.__proto__ = exports.SchemaInstance.prototype;
 
+  // define getter for object properties
+  Factory.prototype.__defineGetter__('properties', function() {
+    return this._properties || {};
+  });
+
   // define the properties that each schema must have
 
   // set resource name
@@ -591,7 +614,6 @@ exports.unregister = function(name) {
  */
 exports.instantiate = function(obj) {
   var Factory = exports.schemas[this.resource];
-  var id = obj[this.key];
   
   if (Factory) {
     // Don't instantiate an already instantiated object
