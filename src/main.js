@@ -492,6 +492,18 @@ SchemaInstance.hook = function(event, timing, callback) {
   this.hooks[timing][event].push(callback);
 };
 
+/**
+ * Runs all registered before-hooks for a specific event.
+ * 
+ * @param {String}
+ *            method
+ * @param {Object}
+ *            obj
+ * @param {Function(err,
+ *            obj)} callback
+ * @param {Function()}
+ *            finish
+ */
 SchemaInstance.runBeforeHooks = function(method, obj, callback, finish) {
   if (method in this.hooks.before) {
     (function loop(hooks) {
@@ -525,21 +537,34 @@ SchemaInstance.runBeforeHooks = function(method, obj, callback, finish) {
   }
 };
 
-SchemaInstance.runAfterHooks = function(method, e, obj, finish) {
+
+/**
+ * Runs all registered after-hooks for a specific event.
+ * 
+ * @param {String}
+ *            method
+ * @param {Error}
+ *            err
+ * @param {Object}
+ *            obj
+ * @param {Function(res,
+ *            obj)} finish
+ */
+SchemaInstance.runAfterHooks = function(method, err, obj, finish) {
   if (method in this.hooks.after) {
     (function loop(hooks) {
       var hook = hooks.shift();
 
       if (hook && hook.length === 3) {
-        hook(e, obj, function(e, obj) {
-          if (e) {
-            finish(e, obj);
+        hook(err, obj, function(err, obj) {
+          if (err) {
+            finish(err, obj);
           } else {
             loop(hooks);
           }
         });
       } else if (hook && hook.length === 2) {
-        var res = hook(e, obj);
+        var res = hook(err, obj);
         if (res === true) {
           loop(hooks);
         } else {
