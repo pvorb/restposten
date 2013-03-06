@@ -709,7 +709,7 @@ exports.defineProperty = function(obj, property, schema) {
     enumerable : true
   });
 
-  if (typeof obj[property] === 'undefined') {
+  if (typeof obj[property] == 'undefined') {
     obj[property] = init(obj, property, schema);
   }
 };
