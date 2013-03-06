@@ -143,29 +143,9 @@ SchemaInstance.save = function (obj, callback) {
  */
 SchemaInstance.define = function(schema) {
   var extended = append(this._schema, schema);
-  var that = this;
 
-  var props = extended.properties;
-  var keys = Object.keys(props);
-  var property;
-  var len;
-  var links, link;
-  var i;
-
-  // go through the schema's properties and check for links with "rel": "full"
-  Object.keys(props).forEach(function (key) {
-    property = props[key];
-    if (typeof property.links == 'undefined')
-      return;
-
-    links = property.links;
-    len = links.length;
-    for (i = 0; i < len; i++) {
-      link = links[i];
-      if (link.rel === 'full')
-        foreignKey(that, key, link.href);
-    }
-  });
+  // resolve the relationships between this and other schemas
+  resolveRelations(this);
 
   return extended;
 };
@@ -201,54 +181,6 @@ SchemaInstance.create = function(attrs, callback) {
   }
 
   instance.save(callback);
-};
-
-/**
- * Creates a foreign key relationship. (One-To-Many)
- * 
- * @private
- */
-function foreignKey(from, propertyName, href) {
-  var components = href.split('/');
-
-  // this method will only work for standard values like href = 'author/{@}'
-  if (components.length != 2 && components[1] !== "{@}")
-    return;
-
-  var otherSchema = components[0];
-
-  // if other schema is not yet defined, defer relationship
-  if (typeof exports.schemas[otherSchema] == 'undefined') {
-    var rel = {
-      schema: from,
-      property: propertyName
-    };
-
-    if (typeof exports.deferredRelationships[otherSchema] == 'undefined')
-      exports.deferredRelationships[otherSchema] = [];
-
-    exports.deferredRelationships[otherSchema].push(rel);
-
-    return;
-  }
-
-  var getAll = 'get' + camelize(pluralize(from.resource));
-
-  // define function to get the referenced collection
-  // e.g. getBooks()
-  var other = exports.schemas[otherSchema];
-  other.prototype[getAll] = function(callback) {
-    var query = { propertyName: this._id };
-    from.get({}, callback);
-  };
-
-  var getOne = 'get' + camelize(otherSchema);
-
-  // define function to get the referenced document
-  // e.g. getAuthor()
-  from.prototype[getOne] = function(callback) {
-    other.getOne(this[propertyName], callback);
-  }
 };
 
 /**
@@ -420,7 +352,7 @@ SchemaInstance.prototype.writeProperty = function(k, val, setter) {
 };
 
 /**
- * Defines a new factory schema for creating instances of schemas.
+ * Defines a new schema factory for creating instances of schemas.
  * 
  * @param {String}
  *            name
@@ -488,6 +420,18 @@ exports.define = function(name, schema) {
   // set resource name
   Factory.resource = name;
 
+  // Add this schema to the set of resources, persistence knows about
+  exports.register(name, Factory);
+  
+  // check if any deferred relationships from previously schemas are related to
+  // this schema
+  if (typeof exports.deferredRelationships[Factory.resource] != 'undefined') {
+    // for every deferredRelationship we find for our current schema, resolve it
+    exports.deferredRelationships[Factory.resource].forEach(function(r) {
+      resolveRelations(exports.schemas[r.schema.resource]);
+    });
+  }
+
   // set schema
   Factory.define(schema);
 
@@ -503,19 +447,84 @@ exports.define = function(name, schema) {
   // emit 'init' event
   Factory.init();
 
-  // Add this schema to the set of resources, persistence knows about
-  exports.register(name, Factory);
+  return Factory;
+};
+
+/**
+ * Resolves the relations for a schema.
+ * 
+ * @param factory
+ * 
+ * @private
+ */
+function resolveRelations(factory) {
+  var schema = factory.schema;
+  var props = schema.properties;
   
-  // check if any deferred relationships from previously schemas relate to this
-  // schema
-  if(typeof exports.deferredRelationships[Factory.resource] != 'undefined') {
-    // for every deferredRelationship we find to our current schema, call it
-    exports.deferredRelationships[Factory.resource].forEach(function(r) {
-      exports.resources[r].parent(Factory.resource);
-    });
+  // go through the schema's properties and check for links with "rel": "full"
+  Object.keys(props).forEach(function (key) {
+    var property = props[key];
+    if (typeof property.links == 'undefined')
+      return;
+
+    var links = property.links;
+    var len = links.length;
+    var link;
+    for (var i = 0; i < len; i++) {
+      link = links[i];
+      if (link.rel === 'full')
+        foreignKey(factory, key, link.href);
+    }
+  });
+}
+
+/**
+ * Creates a foreign key relationship. (One-To-Many)
+ * 
+ * @private
+ */
+function foreignKey(from, propertyName, href) {
+  var components = href.split('/');
+
+  // this method will only work for standard values like href = 'author/{@}'
+  if (components.length != 2 && components[1] !== "{@}")
+    return;
+
+  var otherSchema = components[0];
+
+  // if other schema is not yet defined, defer relationship
+  if (typeof exports.schemas[otherSchema] == 'undefined') {
+    var rel = {
+      name: from.resource,
+      schema: from,
+      property: propertyName
+    };
+
+    if (typeof exports.deferredRelationships[otherSchema] == 'undefined')
+      exports.deferredRelationships[otherSchema] = [];
+
+    exports.deferredRelationships[otherSchema].push(rel);
+
+    return;
   }
 
-  return Factory;
+  var getAll = 'get' + camelize(pluralize(from.resource));
+
+  // define function to get the referenced collection
+  // e.g. getBooks()
+  var other = exports.schemas[otherSchema];
+  other.prototype[getAll] = function(callback) {
+    var query = { propertyName: this._id };
+    from.get({}, callback);
+  };
+
+  var getOne = 'get' + camelize(otherSchema);
+
+  // define function to get the referenced document
+  // e.g. getAuthor()
+  from.prototype[getOne] = function(callback) {
+    other.getOne(this[propertyName], callback);
+  }
 };
 
 /**
