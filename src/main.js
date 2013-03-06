@@ -277,60 +277,6 @@ SchemaInstance.prototype.validate = function() {
 };
 
 /**
- * Handle a request.
- * 
- * @private
- * @deprecated
- */
-SchemaInstance._request = function (method, query, callback) {
-
-  if (id) args.push(id);
-  if (obj)
-    args.push(obj.properties ? obj.properties : obj);
-  else {
-    obj = that.connection.cache.get(id) || {};
-    obj[key] = id;
-  }
-
-  this.runBeforeHooks(method, obj, callback, function () {
-    args.push(function (e, result) {
-      if (e) {
-        if (e.status >= 500) {
-          throw new(Error)(e);
-        } else {
-          that.runAfterHooks(method, e, obj, function () {
-            that.emit('error', e, obj);
-            if (callback)
-              callback(e);
-          });
-        }
-      } else {
-        if (Array.isArray(result)) {
-          result = result.map(function (r) {
-            return r ? exports.instantiate.call(that, r) : r;
-          });
-        } else {
-          if (method === 'destroy') {
-          } else {
-            result = exports.instantiate.call(that, result);
-          }
-        }
-
-        that.runAfterHooks(method, null, result, function (e, res) {
-          if (e) { that.emit('error', e); }
-          else   { that.emit(method, res || result); }
-          if (callback) {
-            callback(e || null, result);
-          }
-        });
-      }
-    });
-    
-    exports.engine[method].apply(exports.engine, args);
-  });
-};
-
-/**
  * Get an array of matching instances.
  * 
  * @param {String|Object}
@@ -358,6 +304,24 @@ SchemaInstance.get = function (query, options, callback) {
     
     coll.find(query, options, callback);
   });
+};
+
+/**
+ * Get an array of all instances of the schema.
+ * 
+ * @param {Object}
+ *            [options]
+ * @param {Function(err,
+ *            coll)} callback
+ */
+SchemaInstance.all = function(options, callback) {
+  if (arguments.length == 1) {
+    callback = options;
+    options = {};
+  }
+  
+  // query all schema instances
+  this.get({}, options, callback);
 };
 
 /**
