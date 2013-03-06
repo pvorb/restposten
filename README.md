@@ -96,6 +96,11 @@ See [the JSON Schema specification](http://json-schema.org) for more advanced
 examples and further documentation on JSON Schema.
 
 
+### More advanced examples
+
+You can see more advanced examples in [./examples/](https://github.com/n-fuse/persistence/tree/master/examples/).
+
+
 Maintainers
 -----------
 
