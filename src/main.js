@@ -252,8 +252,8 @@ function foreignKey(from, propertyName, href) {
   // e.g. getBooks()
   var other = exports.schemas[otherSchema];
   other.prototype[getAll] = function(callback) {
-    var query = { _id: this._id };
-    from.get(query, callback);
+    var query = { propertyName: this._id };
+    from.get({}, callback);
   };
   
   var getOne = 'get' + camelize(otherSchema);
@@ -261,7 +261,7 @@ function foreignKey(from, propertyName, href) {
   // define function to get the referenced document
   // e.g. getAuthor()
   from.prototype[getOne] = function(callback) {
-    other.get(this[propertyName], callback);
+    other.getOne(this[propertyName], callback);
   }
 };
 
@@ -304,11 +304,52 @@ SchemaInstance.get = function (query, options, callback) {
       if (err)
         return callback(err);
       
+      // instantiate all objects
       var len = results.length;
       for (var i = 0; i < len; i++) {
         results[i] = exports.instantiate.call(schema, results[i]);
       }
       callback(null, results);
+    });
+  });
+};
+
+/**
+ * Get the first matching instance.
+ * 
+ * @param {String|Object}
+ *            query _id or query object that all resulting instances match
+ * @param {Object}
+ *            [options]
+ * @param {Function(err,
+ *            coll)} callback
+ */
+SchemaInstance.getOne = function (query, options, callback) {
+  if (arguments.length == 2) {
+    callback = options;
+    options = {};
+  }
+  
+  var schema = this;
+  
+  if (typeof query == 'string') {
+    query = { _id: query };
+  }
+  
+  var collName = pluralize(this.resource);
+  
+  exports.engine.getCollection(collName, function(err, coll) {
+    if (err)
+      return callback(err);
+    
+    coll.findOne(query, options, function (err, result) {
+      if (err)
+        return callback(err);
+      
+      // instantiate object
+      result = exports.instantiate.call(schema, result);
+      
+      callback(null, result);
     });
   });
 };
