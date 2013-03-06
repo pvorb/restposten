@@ -5,9 +5,9 @@
  * resourceful and is intended to be used as a replacement for Resourceful. It
  * uses JSON Schema for data validation. It also has support for JSON Schema
  * links, which are directly mapped to relations in the internal data model.
- *
+ * 
  * @module persistence
- *
+ * 
  * @property {Object} engine the persistence engine (must be set on startup)
  * @property {Object} validator the validator engine (must be set on startup)
  * @property {Object} schemas
@@ -48,9 +48,9 @@ exports.__defineGetter__('engine', function() {
 
 /**
  * @classdesc Instance of a Schema.
- *
+ * 
  * @constructor
- *
+ * 
  * @property {Object} schema [getter]
  * @property {Object} properties [getter]
  * @property {String} resource the name of this schema
@@ -108,7 +108,7 @@ SchemaInstance.init = function() {
 
 /**
  * Saves an object.
- *
+ * 
  * @param {Object}
  *            obj object to save
  * @param {Function(err,
@@ -136,7 +136,7 @@ SchemaInstance.save = function (obj, callback) {
 
 /**
  * Define the schema.
- *
+ * 
  * @param {Object}
  *            schema JSON schema definition
  * @returns {Object} extended schema
@@ -145,22 +145,22 @@ SchemaInstance.define = function(schema) {
   var extended = append(this._schema, schema);
   var that = this;
 
-  // go through the schema's properties and check for links with "rel": "full"
   var props = extended.properties;
   var keys = Object.keys(props);
   var property;
-  var lenLinks;
+  var len;
   var links, link;
   var i;
 
+  // go through the schema's properties and check for links with "rel": "full"
   Object.keys(props).forEach(function (key) {
     property = props[key];
     if (typeof property.links == 'undefined')
       return;
 
     links = property.links;
-    lenLinks = links.length;
-    for (i = 0; i < lenLinks; i++) {
+    len = links.length;
+    for (i = 0; i < len; i++) {
       link = links[i];
       if (link.rel === 'full')
         foreignKey(that, key, link.href);
@@ -172,12 +172,12 @@ SchemaInstance.define = function(schema) {
 
 /**
  * Creates a new instance.
- *
+ * 
  * @param {Object}
  *            attrs
  * @param {Function(err,
  *            res)} callback
- *
+ * 
  * @fires 'error'
  */
 SchemaInstance.create = function(attrs, callback) {
@@ -200,26 +200,12 @@ SchemaInstance.create = function(attrs, callback) {
     return;
   }
 
-  this.runBeforeHooks('create', instance, callback, function(err, result) {
-    if (invalid) {
-      that.emit('error', err);
-      if (callback)
-        callback(e);
-      return;
-    }
-
-    that.runAfterHooks('create', null, instance, function (err, res) {
-      if (err)
-        return that.emit('error', err);
-
-      instance.save(callback);
-    });
-  });
+  instance.save(callback);
 };
 
 /**
  * Creates a foreign key relationship. (One-To-Many)
- *
+ * 
  * @private
  */
 function foreignKey(from, propertyName, href) {
@@ -274,7 +260,7 @@ SchemaInstance.prototype.validate = function() {
 
 /**
  * Get an array of matching instances.
- *
+ * 
  * @param {String|Object}
  *            query _id or query object that all resulting instances match
  * @param {Object}
@@ -316,7 +302,7 @@ SchemaInstance.get = function (query, options, callback) {
 
 /**
  * Get the first matching instance.
- *
+ * 
  * @param {String|Object}
  *            query _id or query object that all resulting instances match
  * @param {Object}
@@ -356,7 +342,7 @@ SchemaInstance.getOne = function (query, options, callback) {
 
 /**
  * Get an array of all instances of the schema.
- *
+ * 
  * @param {Object}
  *            [options]
  * @param {Function(err,
@@ -374,7 +360,7 @@ SchemaInstance.all = function(options, callback) {
 
 /**
  * Saves the instance.
- *
+ * 
  * @param {Function(err,
  *            res)} callback
  */
@@ -410,7 +396,7 @@ SchemaInstance.prototype.save = function(callback) {
 
 /**
  * Deletes the instance.
- *
+ * 
  * @param {String}
  *            id id of the instance
  */
@@ -433,110 +419,9 @@ SchemaInstance.prototype.writeProperty = function(k, val, setter) {
   return this._properties[k] = setter ? setter.call(this, val) : val;
 };
 
-// Hooks
-SchemaInstance.after = function(event, callback) {
-  this.hook(event, 'after', callback);
-};
-
-SchemaInstance.before = function(event, callback) {
-  this.hook(event, 'before', callback);
-};
-
-SchemaInstance.hook = function(event, timing, callback) {
-  this.hooks[timing][event] = this.hooks[timing][event] || [];
-  this.hooks[timing][event].push(callback);
-};
-
-/**
- * Runs all registered before-hooks for a specific event.
- *
- * @param {String}
- *            method
- * @param {Object}
- *            obj
- * @param {Function(err,
- *            obj)} callback
- * @param {Function()}
- *            finish
- */
-SchemaInstance.runBeforeHooks = function(method, obj, callback, finish) {
-  if (method in this.hooks.before) {
-    (function loop(hooks) {
-      var hook = hooks.shift();
-
-      if (hook && hook.length === 2) {
-        hook(obj, function(e, obj) {
-          if (e || obj) {
-            if (callback) {
-              callback(e, obj);
-            }
-          } else {
-            loop(hooks);
-          }
-        });
-      } else if (hook && hook.length === 1) {
-        var res = hook(obj);
-        if (res === true) {
-          loop(hooks);
-        } else {
-          if (callback) {
-            callback(res, obj);
-          }
-        }
-      } else {
-        finish();
-      }
-    })(this.hooks.before[method].slice(0));
-  } else {
-    finish();
-  }
-};
-
-
-/**
- * Runs all registered after-hooks for a specific event.
- *
- * @param {String}
- *            method
- * @param {Error}
- *            err
- * @param {Object}
- *            obj
- * @param {Function(res,
- *            obj)} finish
- */
-SchemaInstance.runAfterHooks = function(method, err, obj, finish) {
-  if (method in this.hooks.after) {
-    (function loop(hooks) {
-      var hook = hooks.shift();
-
-      if (hook && hook.length === 3) {
-        hook(err, obj, function(err, obj) {
-          if (err) {
-            finish(err, obj);
-          } else {
-            loop(hooks);
-          }
-        });
-      } else if (hook && hook.length === 2) {
-        var res = hook(err, obj);
-        if (res === true) {
-          loop(hooks);
-        } else {
-          finish(res, obj);
-        }
-      } else {
-        finish();
-      }
-    })(this.hooks.after[method].slice(0));
-  } else {
-    finish();
-  }
-};
-
 /**
  * Defines a new factory schema for creating instances of schemas.
- *
+ * 
  * @param {String}
  *            name
  * @param {Object}
@@ -606,18 +491,6 @@ exports.define = function(name, schema) {
   // set schema
   Factory.define(schema);
 
-  // define some hooks
-  Factory.hooks = {
-    before : {},
-    after : {}
-  };
-
-  // set arrays for before and after hooks
-  [ 'get', 'save', 'update', 'create', 'destroy' ].forEach(function(m) {
-    Factory.hooks.before[m] = [];
-    Factory.hooks.after[m] = [];
-  });
-
   Factory.emitter = new events.EventEmitter();
 
   // register emitter methods with factory
@@ -632,6 +505,15 @@ exports.define = function(name, schema) {
 
   // Add this schema to the set of resources, persistence knows about
   exports.register(name, Factory);
+  
+  // check if any deferred relationships from previously schemas relate to this
+  // schema
+  if(typeof exports.deferredRelationships[Factory.resource] != 'undefined') {
+    // for every deferredRelationship we find to our current schema, call it
+    exports.deferredRelationships[Factory.resource].forEach(function(r) {
+      exports.resources[r].parent(Factory.resource);
+    });
+  }
 
   return Factory;
 };
