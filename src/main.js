@@ -10,6 +10,8 @@
  * 
  * @property {Object} engine the persistence engine (must be set on startup)
  * @property {Object} validator the validator engine (must be set on startup)
+ * @property {Object} schemas
+ * @property {Object} deferredRelationships
  */
 
 var events = require('events');
@@ -20,29 +22,28 @@ var pluralize = inflection.pluralize;
 var camelize = inflection.camelize;
 var errors = require('./errors.js');
 
-var persistence = exports;
-persistence.schemas = {};
-persistence.deferredRelationships = {};
+exports.schemas = {};
+exports.deferredRelationships = {};
 
-persistence._validator;
-persistence._engine;
+exports._validator;
+exports._engine;
 
 // getter / setter for validator
-persistence.__defineSetter__('validator', function(validator) {
-  return persistence._validator = validator;
+exports.__defineSetter__('validator', function(validator) {
+  return exports._validator = validator;
 });
 
-persistence.__defineGetter__('validator', function() {
-  return persistence._validator;
+exports.__defineGetter__('validator', function() {
+  return exports._validator;
 });
 
 // getter / setter for engine
-persistence.__defineSetter__('engine', function(engine) {
-  return persistence._engine = engine;
+exports.__defineSetter__('engine', function(engine) {
+  return exports._engine = engine;
 });
 
-persistence.__defineGetter__('engine', function() {
-  return persistence._engine;
+exports.__defineGetter__('engine', function() {
+  return exports._engine;
 });
 
 /**
@@ -56,7 +57,7 @@ persistence.__defineGetter__('engine', function() {
  * @property {String} key property that is used as the ID
  * @property {Object} connection
  */
-var SchemaInstance = persistence.SchemaInstance = function SchemaInstance() {
+var SchemaInstance = exports.SchemaInstance = function SchemaInstance() {
   Object.defineProperty(this, 'isNewRecord', {
     value : true,
     enumerable: false,
@@ -98,7 +99,7 @@ SchemaInstance.__defineSetter__('resource', function(resource) {
 
 // getter / setter for connection property
 SchemaInstance.__defineGetter__('connection', function () {
-  return this._connection || persistence.connection;
+  return this._connection || exports.connection;
 });
 
 SchemaInstance.__defineSetter__('connection', function (val) {
@@ -130,18 +131,19 @@ SchemaInstance.save = function (obj, callback) {
   }
 
   var now = Date.now();
-  obj.mtime = now;
-  if (obj.isNewRecord) {
+  if (obj.isNewRecord || typeof obj.ctime == 'undefined') {
     obj.ctime = now;
   }
+  obj.mtime = now;
   
   var collName = pluralize(this.resource);
   
   // ensure if engine is already set
-  if (typeof persistence.engine == 'undefined')
+  if (typeof exports.engine == 'undefined')
     throw errs.create('EngineUndefined');
   
-  persistence.engine.getCollection(collName, function (err, coll) {
+  exports.engine.getCollection(collName, function (err, coll) {
+    console.log(coll.name);
     coll.save(obj, callback);
   });
 };
@@ -189,15 +191,17 @@ SchemaInstance.define = function(schema) {
  *            attrs
  * @param {Function(err,
  *            res)} callback
+ * 
+ * @fires 'error'
  */
 SchemaInstance.create = function(attrs, callback) {
   var instance = new (this)(attrs);
   var that = this;
 
-  if (typeof persistence.validator == 'undefined')
+  if (typeof exports.validator == 'undefined')
     throw errs.create('ValidatorUndefined');
 
-  var e = persistence.validator.validate(instance, this.schema);
+  var e = exports.validator.validate(instance, this.schema);
   var invalid = e.length > 0;
   if (invalid) {
     var opts = { errors: e, value: attrs, schema: this.schema };
@@ -210,8 +214,6 @@ SchemaInstance.create = function(attrs, callback) {
     return;
   }
 
-  var key = this.key;
-  var oldid = instance[key];
   this.runBeforeHooks('create', instance, callback, function(err, result) {
     if (invalid) {
       that.emit('error', err);
@@ -247,16 +249,16 @@ function foreignKey(from, propertyName, href) {
   var otherSchema = components[0];
 
   // if other schema is not yet defined, defer relationship
-  if (typeof persistence.schemas[otherSchema] == 'undefined') {
+  if (typeof exports.schemas[otherSchema] == 'undefined') {
     var rel = {
       schema: from,
       property: propertyName
     };
     
-    if (typeof persistence.deferredRelationships[otherSchema] == 'undefined')
-      persistence.deferredRelationships[otherSchema] = [];
+    if (typeof exports.deferredRelationships[otherSchema] == 'undefined')
+      exports.deferredRelationships[otherSchema] = [];
     
-    persistence.deferredRelationships[otherSchema].push(rel);
+    exports.deferredRelationships[otherSchema].push(rel);
     
     return;
   }
@@ -265,7 +267,7 @@ function foreignKey(from, propertyName, href) {
   
   // define function to get the referenced collection
   // e.g. getBooks()
-  var other = persistence.schemas[otherSchema];
+  var other = exports.schemas[otherSchema];
   other.prototype[getAll] = function(callback) {
     var query = {};
     query[propertyName] = this.id;
@@ -285,7 +287,7 @@ function foreignKey(from, propertyName, href) {
  * Validates the instance.
  */
 SchemaInstance.prototype.validate = function() {
-  return persistence.validator.validate(this, this.constructor.schema);
+  return exports.validator.validate(this, this.constructor.schema);
 };
 
 /**
@@ -319,14 +321,12 @@ SchemaInstance._request = function (method, query, callback) {
       } else {
         if (Array.isArray(result)) {
           result = result.map(function (r) {
-            return r ? persistence.instantiate.call(that, r) : r;
+            return r ? exports.instantiate.call(that, r) : r;
           });
         } else {
           if (method === 'destroy') {
-            persistence.engine.cache.clear(id);
           } else {
-            persistence.engine.cache.put(result[key], result);
-            result = persistence.instantiate.call(that, result);
+            result = exports.instantiate.call(that, result);
           }
         }
 
@@ -340,15 +340,15 @@ SchemaInstance._request = function (method, query, callback) {
       }
     });
     
-    persistence.engine[method].apply(persistence.engine, args);
+    exports.engine[method].apply(exports.engine, args);
   });
 };
 
 /**
  * Get an array of matching instances.
  * 
- * @param {Object}
- *            query query object that all resulting instances match
+ * @param {String|Object}
+ *            query _id or query object that all resulting instances match
  * @param {Object}
  *            [options]
  * @param {Function(err,
@@ -360,7 +360,13 @@ SchemaInstance.get = function (query, options, callback) {
     options = {};
   }
   
-  persistence.engine.getCollection(this.resource, function(err, coll) {
+  if (typeof query == 'string') {
+    query = { _id: query };
+  }
+  
+  var collName = pluralize(this.resource);
+  
+  exports.engine.getCollection(collName, function(err, coll) {
     if (err)
       return callback(err);
     
@@ -370,6 +376,9 @@ SchemaInstance.get = function (query, options, callback) {
 
 /**
  * Saves the instance.
+ * 
+ * @param {Function(err,
+ *            res)} callback
  */
 SchemaInstance.prototype.save = function(callback) {
   var self = this;
@@ -386,32 +395,31 @@ SchemaInstance.prototype.save = function(callback) {
     return callback(err);
   }
 
-  this.constructor.save(this, function(err, res) {
+  // call SchemaInstance.save()
+  this.constructor.save(this._properties, function(err, res) {
     if (!err)
       self.isNewRecord = false;
-    
+
     if (callback)
       callback(err, res);
-  })
+  });
 };
 
 /**
  * Deletes the instance.
  * 
- * @param id
- *            id of the instance
+ * @param {String}
+ *            id id of the instance
  */
 SchemaInstance.delete = function(id, callback) {
-  var key = this.key;
-
-  if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
-    id = this.schema.properties[key].sanitize(id);
-  }
-
-  var newid = pluralize(this.resource) + "/" + id;
-
-  return newid ? this._request('destroy', newid, callback) : callback
-      && callback(new Error('key is undefined'));
+  var collName = pluralize(this.resource);
+  
+  exports.engine.getCollection(collName, function (err, coll) {
+    if (err)
+      return callback(err);
+    
+    coll.delete({ _id: id }, callback);
+  });
 };
 
 /**
@@ -589,11 +597,11 @@ SchemaInstance.runAfterHooks = function(method, err, obj, finish) {
  *            schema JSON schema object
  * @returns factory function for creating new instances
  */
-persistence.define = function(name, schema) {
+exports.define = function(name, schema) {
 
   var Factory = function Factory(attrs) {
     var self = this;
-    persistence.SchemaInstance.call(this);
+    exports.SchemaInstance.call(this);
 
     // set attributes
     Object.defineProperty(this, '_properties', {
@@ -629,15 +637,15 @@ persistence.define = function(name, schema) {
 
     // define properties from schema
     Object.keys(this._properties).forEach(function(k) {
-      persistence.defineProperty(self, k, Factory.properties[k]);
+      exports.defineProperty(self, k, Factory.properties[k]);
     });
 
     return this;
   }
 
   // prototype inheritance
-  Factory.__proto__ = persistence.SchemaInstance;
-  Factory.prototype.__proto__ = persistence.SchemaInstance.prototype;
+  Factory.__proto__ = exports.SchemaInstance;
+  Factory.prototype.__proto__ = exports.SchemaInstance.prototype;
 
   // define the properties that each schema must have
 
@@ -672,7 +680,7 @@ persistence.define = function(name, schema) {
   Factory.init();
 
   // Add this schema to the set of resources, persistence knows about
-  persistence.register(name, Factory);
+  exports.register(name, Factory);
 
   return Factory;
 };
@@ -680,26 +688,26 @@ persistence.define = function(name, schema) {
 /**
  * Registers a schema.
  */
-persistence.register = function(name, schema) {
+exports.register = function(name, schema) {
   return this.schemas[name] = schema;
 };
 
 /**
  * Unregisters a schema.
  */
-persistence.unregister = function(name) {
+exports.unregister = function(name) {
   delete this.schemas[name];
 };
 
 /**
  * Instantiate an object if it hasn't already been instantiated.
  */
-persistence.instantiate = function(obj) {
-  var Factory = persistence.schemas[this.resource];
+exports.instantiate = function(obj) {
+  var Factory = exports.schemas[this.resource];
   var id = obj[this.key];
 
-  if (id && persistence.engine.cache.has(id)) {
-    obj = persistence.engine.cache.get(id);
+  if (id && exports.engine.cache.has(id)) {
+    obj = exports.engine.cache.get(id);
   }
   
   if (Factory) {
@@ -721,7 +729,7 @@ persistence.instantiate = function(obj) {
  * 
  * TODO still needed?
  */
-persistence.defineProperty = function(obj, property, schema) {
+exports.defineProperty = function(obj, property, schema) {
   schema = schema || {};
 
   // Call setter if needed
