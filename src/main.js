@@ -58,12 +58,6 @@ exports.__defineGetter__('engine', function() {
  * @property {Object} connection
  */
 var SchemaInstance = exports.SchemaInstance = function SchemaInstance() {
-  Object.defineProperty(this, 'isNewRecord', {
-    value : true,
-    enumerable: false,
-    writable : true
-  });
-
   // init local schema
   Object.defineProperty(this, 'schema', {
     value : this.constructor.schema,
@@ -71,7 +65,6 @@ var SchemaInstance = exports.SchemaInstance = function SchemaInstance() {
     configurable : true
   });
 };
-
 
 // set initial schema
 /**
@@ -130,12 +123,6 @@ SchemaInstance.save = function (obj, callback) {
     return callback(err);
   }
 
-  var now = Date.now();
-  if (obj.isNewRecord || typeof obj.ctime == 'undefined') {
-    obj.ctime = now;
-  }
-  obj.mtime = now;
-  
   var collName = pluralize(this.resource);
   
   // ensure if engine is already set
@@ -143,7 +130,6 @@ SchemaInstance.save = function (obj, callback) {
     throw errs.create('EngineUndefined');
   
   exports.engine.getCollection(collName, function (err, coll) {
-    console.log(coll.name);
     coll.save(obj, callback);
   });
 };
@@ -396,13 +382,7 @@ SchemaInstance.prototype.save = function(callback) {
   }
 
   // call SchemaInstance.save()
-  this.constructor.save(this._properties, function(err, res) {
-    if (!err)
-      self.isNewRecord = false;
-
-    if (callback)
-      callback(err, res);
-  });
+  this.constructor.save(this._properties, callback);
 };
 
 /**
@@ -420,63 +400,6 @@ SchemaInstance.delete = function(id, callback) {
     
     coll.delete({ _id: id }, callback);
   });
-};
-
-/**
- * Overwrites the instance.
- * 
- * TODO adjust
- */
-SchemaInstance.update = function(id, obj, callback) {
-  var key = this.key;
-
-  if (this.schema.properties[key] && this.schema.properties[key].sanitize) {
-    id = this.schema.properties[key].sanitize(id);
-  }
-
-  if (this._mtime) {
-    obj.mtime = Date.now();
-  }
-
-  var self = this, partialSchema = {
-    properties : {}
-  }, validate;
-
-  // TODO check linking IDs
-  Object.keys(obj).forEach(function(key) {
-    if (self.schema.properties[key]) {
-      partialSchema.properties[key] = self.schema.properties[key];
-    }
-  });
-
-  validate = this.prototype.validate({
-    _properties : obj
-  }, partialSchema);
-
-  if (!validate.valid) {
-    var e = {
-      validate : validate,
-      value : obj,
-      schema : this.schema
-    };
-    this.emit('error', e);
-    if (callback) {
-      callback(e);
-    }
-    return;
-  }
-
-  var newid = pluralize(this.resource) + "/" + id, oldid = id;
-  obj[key] = newid;
-  obj.resource = this._resource;
-
-  return id ? this._request('update', newid, obj, function(err, result) {
-    if (result) {
-      result[key] = oldid;
-      obj[key] = oldid;
-    }
-    callback && callback(err, result);
-  }) : callback && callback(new Error('key is undefined'));
 };
 
 SchemaInstance.prototype.readProperty = function(k, getter) {
@@ -716,7 +639,6 @@ exports.instantiate = function(obj) {
       return obj;
     } else {
       var instance = new Factory(obj);
-      instance.isNewRecord = false;
       return instance;
     }
   } else {
