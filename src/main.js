@@ -671,8 +671,6 @@ exports.instantiate = function(obj) {
 
 /**
  * Defines a property on the Schema.
- *
- * TODO still needed?
  */
 exports.defineProperty = function(obj, property, schema) {
   schema = schema || {};
