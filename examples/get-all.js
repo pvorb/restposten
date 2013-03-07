@@ -4,25 +4,24 @@ var JaySchema = require('jayschema');
 
 persistence.validator = new JaySchema();
 mem.connect({
-  name : 'persistence_test'
+    name: 'persistence_test'
 }, function(err, db) {
-  if (err)
-    throw err;
+    if (err) throw err;
 
-  persistence.engine = db;
+    persistence.engine = db;
 
-  var Author = persistence.define('author', {
-    "name" : {
-      "type" : "string"
-    }
-  });
-
-  Author.create({
-    _id : 'pvorb',
-    name : 'Paul'
-  }, function(err, pvorb) {
-    Author.all(function(err, result) {
-      console.log(err, result);
+    var Author = persistence.define('author', {
+        "name": {
+            "type": "string"
+        }
     });
-  });
+
+    Author.create({
+        _id: 'pvorb',
+        name: 'Paul'
+    }, function(err, pvorb) {
+        Author.all(function(err, result) {
+            console.log(err, result);
+        });
+    });
 });
