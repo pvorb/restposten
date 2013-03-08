@@ -58,12 +58,6 @@ exports.__defineGetter__('engine', function() {
  * @property {Object} connection
  */
 var SchemaInstance = exports.SchemaInstance = function SchemaInstance() {
-  // init local schema
-  Object.defineProperty(this, 'schema', {
-    value : this.constructor.schema,
-    enumerable : false,
-    configurable : true
-  });
 };
 
 // set initial schema
@@ -115,14 +109,6 @@ SchemaInstance.init = function() {
  *            res)} callback
  */
 SchemaInstance.save = function (obj, callback) {
-  var errors = this.prototype.validate(obj, this.schema); // find errors
-
-  if (errors.length > 0 && callback) {
-    var err = errs.create('ValidationError', { validate: validate, value: obj,
-      schema: this.schema });
-    return callback(err);
-  }
-
   var collName = pluralize(this.resource);
 
   // ensure if engine is already set
@@ -142,7 +128,7 @@ SchemaInstance.save = function (obj, callback) {
  * @returns {Object} extended schema
  */
 SchemaInstance.define = function(schema) {
-  var extended = append(this._schema, schema);
+  var extended = append(this.schema, schema);
 
   // resolve the relationships between this and other schemas
   resolveRelations(this);
@@ -162,32 +148,54 @@ SchemaInstance.define = function(schema) {
  */
 SchemaInstance.create = function(attrs, callback) {
   var instance = new (this)(attrs);
-  var that = this;
-
-  if (typeof exports.validator == 'undefined')
-    throw errs.create('ValidatorUndefined');
-
-  var e = exports.validator.validate(instance, this.schema);
-  var invalid = e.length > 0;
-  if (invalid) {
-    var opts = { errors: e, value: attrs, schema: this.schema };
-    var error = errs.create('ValidationError', opts);
-    this.emit('error', error);
-
-    if (callback)
-      callback(error);
-
-    return;
-  }
-
   instance.save(callback);
 };
+
 
 /**
  * Validates the instance.
  */
 SchemaInstance.prototype.validate = function() {
-  return exports.validator.validate(this, this.constructor.schema);
+  if (typeof exports.validator == 'undefined')
+    throw errs.create('ValidatorUndefined');
+  
+  return exports.validator.validate(this.properties, this.constructor._schema);
+};
+
+/**
+ * Saves the instance.
+ * 
+ * @param {Function(err,
+ *            res)} callback
+ */
+SchemaInstance.prototype.save = function(callback) {
+  var self = this;
+  var errors = this.validate();
+
+  // if there are errors, callback
+  if (errors.length > 0 && callback) {
+    var err = errors.create('ValidationError', {
+      errors : errors,
+      value : this,
+      schema : this.constructor.schema
+    });
+
+    return callback(err);
+  }
+
+  // call SchemaInstance.save()
+  this.constructor.save(this._properties, function(err, res) {
+    if (err)
+      return callback(err);
+
+    var saved;
+    if (typeof res == 'object')
+      saved = self;
+    else
+      saved = res;
+
+    callback(null, saved);
+  });
 };
 
 /**
@@ -291,42 +299,6 @@ SchemaInstance.all = function(options, callback) {
 };
 
 /**
- * Saves the instance.
- * 
- * @param {Function(err,
- *            res)} callback
- */
-SchemaInstance.prototype.save = function(callback) {
-  var self = this;
-  var errors = this.validate();
-
-  // if there are errors, callback
-  if (errors.length > 0 && callback) {
-    var err = errors.create('ValidationError', {
-      errors : errors,
-      value : this,
-      schema : this.schema
-    });
-
-    return callback(err);
-  }
-
-  // call SchemaInstance.save()
-  this.constructor.save(this._properties, function(err, res) {
-    if (err)
-      return callback(err);
-
-    var saved;
-    if (typeof res == 'object')
-      saved = self;
-    else
-      saved = res;
-
-    callback(null, saved);
-  });
-};
-
-/**
  * Deletes the instance.
  * 
  * @param {String}
@@ -355,12 +327,18 @@ SchemaInstance.prototype.writeProperty = function(k, val, setter) {
  * Defines a new schema factory for creating instances of schemas.
  * 
  * @param {String}
- *            name
+ *            [name] lower case singular name of the schema (e.g. `'address'`)
  * @param {Object}
  *            schema JSON schema object
  * @returns factory function for creating new instances
  */
 exports.define = function(name, schema) {
+  if (arguments.length == 1) {
+    schema = name;
+    if (typeof schema.name == 'undefined')
+      throw new Error('no name set on schema definition');
+    name = schema.name;
+  }
 
   var Factory = function Factory(attrs) {
     var self = this;
@@ -383,8 +361,6 @@ exports.define = function(name, schema) {
           self._properties[k] = attrs[k];
       });
     }
-
-    this._properties.resource = name;
 
     // verify methods
     for (var m in Factory) {
@@ -418,9 +394,11 @@ exports.define = function(name, schema) {
   // define the properties that each schema must have
 
   // set resource name
-  Factory.resource = name;
+  Factory._resource = name;
+  // set schema
+  Factory._schema = schema;
 
-  // Add this schema to the set of resources, persistence knows about
+  // Add this schema factory to the set of schemas, persistence knows about
   exports.register(name, Factory);
   
   // check if any deferred relationships from previously schemas are related to
@@ -531,7 +509,7 @@ function foreignKey(from, propertyName, href) {
  * Registers a schema.
  */
 exports.register = function(name, schema) {
-  return this.schemas[name] = schema;
+  return exports.schemas[name] = schema;
 };
 
 /**
