@@ -188,6 +188,8 @@ exports.Resource = Resource;
 
 /**
  * Emits the 'init' event.
+ *
+ * @private
  */
 Resource.prototype.init = function() {
   this.emit('init', this);
