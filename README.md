@@ -34,8 +34,10 @@ The recommended schema validator is
     npm install persistence-cache jayschema
 
 
-[API documentation](http://n-fuse.github.com/persistence/)
-----------------------------------------------------------
+API documentation
+-----------------
+
+You can find the API docs at <http://n-fuse.github.com/persistence/>.
 
 
 Usage
