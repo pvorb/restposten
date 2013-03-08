@@ -9,7 +9,7 @@ mem.connect({
   if (err)
     throw err;
 
-  persistence.engine = db;
+  persistence.database = db;
 
   var Author = persistence.define('author', {
     "properties" : {
