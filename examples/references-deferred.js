@@ -6,8 +6,8 @@ var JaySchema = require('jayschema');
 
 persistence.validator = new JaySchema;
 
-memory.connect(function(err, engine) {
-  persistence.engine = engine;
+memory.connect(function(err, db) {
+  persistence.database = db;
 
   var Book = persistence.define('book', {
     "properties" : {
@@ -38,7 +38,7 @@ memory.connect(function(err, engine) {
   }, function(err, author) {
     if (err)
       throw err;
-    console.log(author._id, 'created');
+    console.log(author.properties._id, 'created');
 
     // create a book
     Book.create({
@@ -48,14 +48,14 @@ memory.connect(function(err, engine) {
       if (err)
         throw err;
 
-      console.log(book._id, 'created');
+      console.log(book.properties._id, 'created');
 
       // get the author of this book
       book.getAuthor(function(err, author) {
         if (err)
           throw err;
 
-        console.log(book._id, 'written by', author._id);
+        console.log(book.properties._id, 'written by', author.properties._id);
       });
 
       // get all books from this author
@@ -63,9 +63,9 @@ memory.connect(function(err, engine) {
         if (err)
           throw err;
 
-        console.log(author._id, 'wrote:');
+        console.log(author.properties._id, 'wrote:');
         books.forEach(function(book) {
-          console.log('  *', book._id);
+          console.log('  *', book.properties._id);
         })
       });
     });

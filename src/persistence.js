@@ -58,20 +58,21 @@ exports.unregister = function(name) {
 exports.define = function(name, schema) {
   var resource = new Resource(name, schema);
   
+  // register resource
+  exports.register(name, resource);
+  
   // check if any deferred relationships from previously defined resources are
   // related to this resource
   if (typeof exports.deferredRelations[name] != 'undefined') {
     // for every deferredRelationship we find for our current resource, resolve
     // it
     exports.deferredRelations[name].forEach(function(r) {
-      resolveRelations(exports.resources[r.name]);
+      resolveRelations(r.resource);
     });
   }
   
   // resolve the relations for the newly created resource
   resolveRelations(resource);
-  
-  exports.register(name, resource);
   resource.init();
   
   return resource;
@@ -130,10 +131,10 @@ function foreignKey(from, propertyName, href) {
       property: propertyName
     };
 
-    if (typeof exports.deferredRelationships[otherResourceName] == 'undefined')
-      exports.deferredRelationships[otherResourceName] = [];
+    if (typeof exports.deferredRelations[otherResourceName] == 'undefined')
+      exports.deferredRelations[otherResourceName] = [];
 
-    exports.deferredRelationships[otherResourceName].push(rel);
+    exports.deferredRelations[otherResourceName].push(rel);
 
     return;
   }
@@ -148,7 +149,7 @@ function foreignKey(from, propertyName, href) {
     query[propertyName] = this.properties._id;
     from.get(query, callback);
   };
-
+  
   var getOne = 'get' + camelize(otherResourceName);
 
   // define function to get the referenced document
