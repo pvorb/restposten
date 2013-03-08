@@ -18,5 +18,8 @@ dbConnector.connect({
   // create model
   schemas = model(persistence);
   
-  restful.createServer(model);
+  var server = restful.createServer(schemas);
+  server.listen(8080, function() {
+    console.log('> http server started on port 8080');
+  });
 });

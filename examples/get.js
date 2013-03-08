@@ -2,7 +2,7 @@ var persistence = require('../');
 var mem = require('persistence-memory');
 var JaySchema = require('jayschema');
 
-persistence.validator = new JaySchema();
+persistence.validator = new JaySchema;
 mem.connect({
   name : 'persistence_test'
 }, function(err, db) {
@@ -12,8 +12,10 @@ mem.connect({
   persistence.engine = db;
 
   var Author = persistence.define('author', {
-    "name" : {
-      "type" : "string"
+    "properties": {
+      "name" : {
+        "type" : "string"
+      }
     }
   });
 
@@ -24,10 +26,10 @@ mem.connect({
     // "pvorb" exists already in scope from the create
 
     // We can also re-fetch the resource
-    Author.get({
+    Author.getOne({
       '_id' : 'pvorb'
-    }, function(err, results) {
-      console.log(err, results[0].properties);
+    }, function(err, result) {
+      console.log(err, result.properties);
     });
   });
 });
