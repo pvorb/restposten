@@ -13,7 +13,7 @@ dbConnector.connect({
   if (err)
     throw err;
 
-  persistence.engine = db;
+  persistence.database = db;
   
   // create model
   schemas = model(persistence);
