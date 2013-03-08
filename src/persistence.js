@@ -71,13 +71,6 @@ exports.define = function(name, schema) {
   // resolve the relations for the newly created resource
   resolveRelations(resource);
   
-  // constructor for instances of this resource
-  resource.Instance = function(properties) {
-    this.resource = resource;
-    this.properties = properties;
-  };
-  resource.Instance.prototype = new ResourceInstance;
-  
   exports.register(name, resource);
   resource.init();
   
@@ -130,7 +123,7 @@ function foreignKey(from, propertyName, href) {
   var otherResourceName = components[0];
 
   // if other schema is not yet defined, defer relationship
-  if (typeof exports.resource[otherResourceName] == 'undefined') {
+  if (typeof exports.resources[otherResourceName] == 'undefined') {
     var rel = {
       name: from.name,
       resource: from,
@@ -152,7 +145,7 @@ function foreignKey(from, propertyName, href) {
   var other = exports.resources[otherResourceName];
   other.Instance.prototype[getAll] = function(callback) {
     var query = {};
-    query[propertyName] = this._id;
+    query[propertyName] = this.properties._id;
     from.get(query, callback);
   };
 
@@ -161,7 +154,7 @@ function foreignKey(from, propertyName, href) {
   // define function to get the referenced document
   // e.g. getAuthor()
   from.Instance.prototype[getOne] = function(callback) {
-    other.getOne(this[propertyName], callback);
+    other.getOne(this.properties[propertyName], callback);
   }
 };
 
@@ -178,8 +171,16 @@ function foreignKey(from, propertyName, href) {
  *            schema JSON Schema for validation of instances
  */
 function Resource(name, schema) {
+  var self = this;
   this.schema = schema;
   this.name = name;
+
+  // constructor for instances of this resource
+  this.Instance = function(properties) {
+    this.resource = self;
+    this.properties = properties;
+  };
+  this.Instance.prototype = new ResourceInstance;
 }
 Resource.prototype = new events.EventEmitter;
 exports.Resource = Resource;
@@ -302,10 +303,9 @@ Resource.prototype.getOne = function (query, options, callback) {
 
   var resource = this;
 
-  if (typeof query == 'string') {
+  if (typeof query == 'string')
     query = { _id: query };
-  }
-
+  
   var collName = pluralize(this.name);
 
   exports.database.getCollection(collName, function(err, coll) {
