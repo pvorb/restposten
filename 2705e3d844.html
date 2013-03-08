@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Module: persistence</title>
+    <title>JSDoc: Class: ResourceInstance</title>
     
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
     
-    <h1 class="page-title">Module: persistence</h1>
+    <h1 class="page-title">Class: ResourceInstance</h1>
     
     
 
@@ -27,8 +27,13 @@
     
 <header>
     <h2>
-    persistence
+        <span class="ancestors"><a href="module-persistence.html">persistence</a>~</span>
+    
+    ResourceInstance
     </h2>
+    
+        <div class="class-description"><p>Resources are used to abstract away data management and
+           validation.</p></div>
     
 </header>  
 
@@ -38,80 +43,8 @@
     
     
         
-            <div class="description"><p>Persistence is a data persistence module for flatiron. It&#39;s an adaptation of
-resourceful and is intended to be used as a replacement for Resourceful. It
-uses JSON Schema for data validation. It also has support for JSON Schema
-links, which are directly mapped to relations in the internal data model.</p></div>
-        
-        
-        
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        persistence.js, line 3
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-        
-        
-    
-    </div>
-    
-    
-    
-    
-    
-    
-    
-    
-        <h3 class="subsection-title">Classes</h3>
-        
-        <dl>
-            <dt><a href="694b5b5022.html">Resource</a></dt>
-            <dd></dd>
-        
-            <dt><a href="2705e3d844.html">ResourceInstance</a></dt>
-            <dd></dd>
-        </dl>
-    
-    
-    
-    
-    
-    
-    
-        <h3 class="subsection-title">Methods</h3>
-        
-        <dl>
-            
 <dt>
-    <h4 class="name" id="define"><span class="type-signature">&lt;static> </span>define<span class="signature">(name, schema)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="ResourceInstance"><span class="type-signature"></span>new ResourceInstance<span class="signature">(name, schema)</span><span class="type-signature"></span></h4>
     
     
 </dt>
@@ -119,7 +52,8 @@ links, which are directly mapped to relations in the internal data model.</p></d
     
     
     <div class="description">
-        <p>Defines a new schema factory for creating instances of schemas.</p>
+        <p>Creates an instance of a resource. Instances are usually created via
+<code>Resource.create()</code>.</p>
     </div>
     
 
@@ -169,7 +103,7 @@ links, which are directly mapped to relations in the internal data model.</p></d
             
             
             
-            <td class="description last"><p>lower case singular name of the schema (e.g. <code>&#39;address&#39;</code>)</p></td>
+            <td class="description last"><p>name of the resource</p></td>
         </tr>
 	
 	
@@ -192,7 +126,7 @@ links, which are directly mapped to relations in the internal data model.</p></d
             
             
             
-            <td class="description last"><p>JSON schema object</p></td>
+            <td class="description last"><p>JSON Schema for validation of instances</p></td>
         </tr>
 	
 	
@@ -223,7 +157,243 @@ links, which are directly mapped to relations in the internal data model.</p></d
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        persistence.js, line 58
+        persistence.js, line 240
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+    
+    </div>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+        <h3 class="subsection-title">Methods</h3>
+        
+        <dl>
+            
+<dt>
+    <h4 class="name" id="save"><span class="type-signature"></span>save<span class="signature">(<span class="optional">options</span>, callback)</span><span class="type-signature"></span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Saves itself to the database. If the instance already exists in the database,
+the old instance is replaced.</p>
+    </div>
+    
+
+    
+    
+    
+    
+    
+        <h5>Parameters:</h5>
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+		
+		<th>Type</th>
+		
+		
+		<th>Argument</th>
+		
+		
+		
+		
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+	
+	<tbody>
+	
+	
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+            
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+            
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+                    
+                
+                </td>
+            
+            
+            
+            
+            <td class="description last"></td>
+        </tr>
+	
+	
+	
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+            
+            <td class="type">
+            
+                
+<span class="param-type">Function(err,saved)</span>
+
+
+            
+            </td>
+            
+            
+                <td class="attributes">
+                
+                    
+                
+                </td>
+            
+            
+            
+            
+            <td class="description last"></td>
+        </tr>
+	
+	
+	</tbody>
+</table>
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        persistence.js, line 361
+    </li></ul></dd>
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+    
+    
+    
+    
+    
+    
+    
+    
+</dd>
+
+        
+            
+<dt>
+    <h4 class="name" id="validate"><span class="type-signature"></span>validate<span class="signature">()</span><span class="type-signature"> &rarr; {Object[]}</span></h4>
+    
+    
+</dt>
+<dd>
+    
+    
+    <div class="description">
+        <p>Validates itself by using the global JSON Schema validator.</p>
+    </div>
+    
+
+    
+    
+    
+    
+    
+    
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        persistence.js, line 249
     </li></ul></dd>
     
     
@@ -244,261 +414,24 @@ links, which are directly mapped to relations in the internal data model.</p></d
     
             
 <div class="param-desc">
-    <p>factory function for creating new instances</p>
+    <p>an array of objects that contain error information</p>
 </div>
 
 
 
-        
-    
-    
-</dd>
-
-        
-            
-<dt>
-    <h4 class="name" id="register"><span class="type-signature">&lt;static> </span>register<span class="signature">(name, resource)</span><span class="type-signature"></span></h4>
-    
-    
-</dt>
-<dd>
-    
-    
-    <div class="description">
-        <p>Registers a resource.</p>
-    </div>
-    
-
-    
-    
-    
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
+<dl>
+	<dt>
+		Type
+	</dt>
+	<dd>
 		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
+<span class="param-type">Object[]</span>
 
 
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"></td>
-        </tr>
-	
-	
-	
-        <tr>
-            
-                <td class="name"><code>resource</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">Resource</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
-    
-    
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        persistence.js, line 34
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
+	</dd>
 </dl>
 
-    
-    
-    
-    
-    
-    
-    
-    
-</dd>
-
         
-            
-<dt>
-    <h4 class="name" id="unregister"><span class="type-signature">&lt;static> </span>unregister<span class="signature">(name)</span><span class="type-signature"></span></h4>
-    
-    
-</dt>
-<dd>
-    
-    
-    <div class="description">
-        <p>Unregisters a resource.</p>
-    </div>
-    
-
-    
-    
-    
-    
-    
-        <h5>Parameters:</h5>
-        
-
-<table class="params">
-    <thead>
-	<tr>
-		
-		<th>Name</th>
-		
-		
-		<th>Type</th>
-		
-		
-		
-		
-		
-		<th class="last">Description</th>
-	</tr>
-	</thead>
-	
-	<tbody>
-	
-	
-        <tr>
-            
-                <td class="name"><code>name</code></td>
-            
-            
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-            
-            
-            
-            
-            
-            <td class="description last"></td>
-        </tr>
-	
-	
-	</tbody>
-</table>
-    
-    
-    
-<dl class="details">
-    
-        
-    
-    
-    
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        persistence.js, line 44
-    </li></ul></dd>
-    
-    
-    
-    
-    
-    
-    
-</dl>
-
-    
-    
-    
-    
-    
-    
     
     
 </dd>
