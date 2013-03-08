@@ -218,6 +218,10 @@ Resource.prototype.instantiate = function(properties) {
   return new (this.Instance)(properties);
 };
 
+Resource.prototype.__defineGetter__('_resource', function() {
+  return this.name;
+});
+
 /**
  * Creates an instance of a resource. Instances are usually created via
  * `Resource.create()`.
