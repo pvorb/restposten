@@ -6,7 +6,8 @@ It's an adaptation of [resourceful](https://github.com/flatiron/resourceful).
 You can replace resourceful in your flatiron app by persistence. It uses [JSON
 Schema](http://json-schema.org/) for data validation. It also has support for
 JSON Schema links, which are directly mapped to relations in the internal data
-model.
+model. Being a replacement for resourceful you can use it with
+[restful](https://github.com/flatiron/restful), too.
 
 
 Installation
@@ -33,12 +34,16 @@ The recommended schema validator is
     npm install persistence-cache jayschema
 
 
+[API documentation](http://n-fuse.github.com/persistence/)
+----------------------------------------------------------
+
+
 Usage
 -----
 
 ### Simple example
 
-This example uses _persistence-mongodb_ and _jayschema_.
+This example uses _persistence-mongodb_ and _JaySchema_.
 
     var persistence = require('persistence');
     var mongo = require('persistence-mongodb');
@@ -49,6 +54,8 @@ This example uses _persistence-mongodb_ and _jayschema_.
     mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
       if (err)
         throw err;
+
+      persistence.database = db;
     
       // Example schema
       var userSchema = {
