@@ -18,14 +18,15 @@
 		"url": "git://github.com/n-fuse/persistence.git"
 	},
 	"dependencies": {
-	   "append": "~0.1.1",
-	   "clone": "~0.1.5",
-	   "errs": "~0.2.3",
-	   "i": "~0.3.1"
+		"append": "~0.1.1",
+		"clone": "~0.1.5",
+		"errs": "~0.2.3",
+		"i": "~0.3.1"
 	},
 	"devDependencies": {
 		"jayschema": "~0.1.5",
 		"mocha": "*",
-		"persistence-memory": "*"
+		"persistence-memory": "*",
+		"flatiron": "*"
 	}
 } 
