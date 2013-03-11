@@ -224,6 +224,10 @@ Resource.prototype.__defineGetter__('_resource', function() {
   return this.name;
 });
 
+Resource.prototype.__defineGetter__('lowerResource', function() {
+  return this.name;
+});
+
 /**
  * Creates an instance of a resource. Instances are usually created via
  * `Resource.create()`.
