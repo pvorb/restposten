@@ -225,7 +225,7 @@ Resource.prototype.__defineGetter__('_resource', function() {
 });
 
 Resource.prototype.__defineGetter__('lowerResource', function() {
-  return this.name;
+  return pluralize(this.name);
 });
 
 /**
