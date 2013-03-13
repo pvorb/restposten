@@ -178,15 +178,28 @@ function Resource(name, schema) {
 
   // constructor for instances of this resource
   this.Instance = function(properties) {
+    var inst = this;
     
     // define not-enumerable properties
     Object.defineProperty(this, 'resource', {
       enumerable: false,
       value: self
     });
+    
     Object.defineProperty(this, 'properties', {
       enumerable: false,
-      value: properties
+      set: function (properties) {
+        // remove old keys
+        Object.keys(inst).forEach(function (k) {
+          delete inst[k];
+        });
+        
+        // append new
+        append(inst, properties);
+      },
+      get: function () {
+        return properties;
+      }
     });
     
     // mix all properties from properties into this
