@@ -3,7 +3,7 @@ Restposten
 
 Restposten is a data persistence module for [flatiron](http://flatironjs.org/).
 It's an adaptation of [resourceful](https://github.com/flatiron/resourceful).
-You can replace resourceful in your flatiron app by restposten. It uses [JSON
+You can replace resourceful in your flatiron app by Restposten. It uses [JSON
 Schema](http://json-schema.org/) for data validation. It also has support for
 JSON Schema links, which are directly mapped to relations in the internal data
 model. Being a replacement for resourceful you can use it with
@@ -117,4 +117,4 @@ Maintainers
 License
 -------
 
-[Apache 2.0 License](https://github.com/n-fuse/restposten/tree/master/LICENSE.txt)
+[MIT License](https://github.com/n-fuse/restposten/tree/master/LICENSE.txt)
