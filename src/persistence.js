@@ -1,12 +1,12 @@
 'use strict';
 
 /**
- * Persistence is a data persistence module for flatiron. It's an adaptation of
+ * restposten is a data restposten module for flatiron. It's an adaptation of
  * resourceful and is intended to be used as a replacement for Resourceful. It
  * uses JSON Schema for data validation. It also has support for JSON Schema
  * links, which are directly mapped to relations in the internal data model.
  * 
- * @module persistence
+ * @module restposten
  */
 
 var events = require('events');

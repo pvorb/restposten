@@ -1,9 +1,9 @@
-persistence
-===========
+Restposten
+==========
 
-Persistence is a data persistence module for [flatiron](http://flatironjs.org/).
+Restposten is a data persistence module for [flatiron](http://flatironjs.org/).
 It's an adaptation of [resourceful](https://github.com/flatiron/resourceful).
-You can replace resourceful in your flatiron app by persistence. It uses [JSON
+You can replace resourceful in your flatiron app by restposten. It uses [JSON
 Schema](http://json-schema.org/) for data validation. It also has support for
 JSON Schema links, which are directly mapped to relations in the internal data
 model. Being a replacement for resourceful you can use it with
@@ -13,31 +13,31 @@ model. Being a replacement for resourceful you can use it with
 Installation
 ------------
 
-    npm install persistence
+    npm install restposten
 
 You also have to provide a database engine, a cache and a JSON Schema validator.
 
 Currently, there are two database engines:
-[persistence-mongodb](https://github.com/n-fuse/persistence-mongodb) and
-[persistence-memory](https://github.com/n-fuse/persistence-memory) (a in-memory
+[restposten-mongodb](https://github.com/n-fuse/restposten-mongodb) and
+[restposten-memory](https://github.com/n-fuse/restposten-memory) (a in-memory
 database for testing purposes).
 
-    npm install persistence-mongodb
+    npm install restposten-mongodb
 
 or
 
-    npm install persistence-memory
+    npm install restposten-memory
 
 The recommended schema validator is
 [JaySchema](https://github.com/natesilva/jayschema).
 
-    npm install persistence-cache jayschema
+    npm install jayschema
 
 
 API documentation
 -----------------
 
-You can find the API docs at <http://n-fuse.github.com/persistence/>.
+You can find the API docs at <http://n-fuse.github.com/restposten/>.
 
 
 Usage
@@ -45,19 +45,19 @@ Usage
 
 ### Simple example
 
-This example uses _persistence-mongodb_ and _JaySchema_.
+This example uses _restposten-mongodb_ and _JaySchema_.
 
-    var persistence = require('persistence');
-    var mongo = require('persistence-mongodb');
+    var restposten = require('restposten');
+    var mongo = require('restposten-mongodb');
     var JaySchema = require('jayschema');
     
-    persistence.validator = new JaySchema();
+    restposten.validator = new JaySchema();
     
     mongo.connect({ host: 'localhost', port: 27017 }, function (err, db) {
       if (err)
         throw err;
 
-      persistence.database = db;
+      restposten.database = db;
     
       // Example schema
       var userSchema = {
@@ -82,10 +82,10 @@ This example uses _persistence-mongodb_ and _JaySchema_.
     
       // Register a schema for validation.
       // This is only required, if you have schemas that reference each other.
-      persistence.validator.register(userSchema);
+      restposten.validator.register(userSchema);
     
       // Define the User resource.
-      var User = persistence.define('user', userSchema);
+      var User = restposten.define('user', userSchema);
     
       // Create a user, who's missing an email address. This will throw an error.
       User.create({
@@ -105,7 +105,7 @@ examples and further documentation on JSON Schema.
 
 ### More advanced examples
 
-You can see more advanced examples in [examples/](https://github.com/n-fuse/persistence/tree/master/examples/).
+You can see more advanced examples in [examples/](https://github.com/n-fuse/restposten/tree/master/examples/).
 
 
 Maintainers
@@ -117,4 +117,4 @@ Maintainers
 License
 -------
 
-[Apache 2.0 License](https://github.com/n-fuse/persistence/tree/master/LICENSE.txt)
+[Apache 2.0 License](https://github.com/n-fuse/restposten/tree/master/LICENSE.txt)
