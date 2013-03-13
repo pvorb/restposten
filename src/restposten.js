@@ -427,7 +427,7 @@ ResourceInstance.prototype.save = function(options, callback) {
  * @param {Function(err,deleted)}
  *                callback
  */
-Resource.prototype['delete'] = function(id, callback) {
+Resource.prototype.delete = function(id, callback) {
   var collName = pluralize(this.name);
 
   exports.database.getCollection(collName, function (err, coll) {
