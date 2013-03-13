@@ -178,8 +178,19 @@ function Resource(name, schema) {
 
   // constructor for instances of this resource
   this.Instance = function(properties) {
-    this.resource = self;
-    this.properties = properties;
+    
+    // define not-enumerable properties
+    Object.defineProperty(this, 'resource', {
+      enumerable: false,
+      value: self
+    });
+    Object.defineProperty(this, 'properties', {
+      enumerable: false,
+      value: properties
+    });
+    
+    // mix all properties from properties into this
+    append(this, properties);
   };
   this.Instance.prototype = new ResourceInstance;
 }
@@ -403,7 +414,7 @@ ResourceInstance.prototype.save = function(options, callback) {
  * @param {Function(err,deleted)}
  *                callback
  */
-Resource.prototype.delete = function(id, callback) {
+Resource.prototype['delete'] = function(id, callback) {
   var collName = pluralize(this.name);
 
   exports.database.getCollection(collName, function (err, coll) {
