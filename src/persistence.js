@@ -27,9 +27,9 @@ exports.validator;
  * Registers a resource.
  * 
  * @param {String}
- *            name
+ *                name
  * @param {Resource}
- *            resource
+ *                resource
  */
 exports.register = function(name, resource) {
   exports.resources[name] = resource;
@@ -39,7 +39,7 @@ exports.register = function(name, resource) {
  * Unregisters a resource.
  * 
  * @param {String}
- *            name
+ *                name
  */
 exports.unregister = function(name) {
   delete this.resources[name];
@@ -49,9 +49,9 @@ exports.unregister = function(name) {
  * Defines a new schema factory for creating instances of schemas.
  * 
  * @param {String}
- *            name lower case singular name of the schema (e.g. `'address'`)
+ *                name lower case singular name of the schema (e.g. `'address'`)
  * @param {Object}
- *            schema JSON schema object
+ *                schema JSON schema object
  * 
  * @returns factory function for creating new instances
  */
@@ -82,7 +82,7 @@ exports.define = function(name, schema) {
  * Resolves the relations for a resource.
  * 
  * @param {Resource}
- *            resource
+ *                resource
  * 
  * @private
  */
@@ -110,7 +110,7 @@ function resolveRelations(resource) {
  * Creates a foreign key relationship. (One-To-Many)
  * 
  * @param {Resource}
- *            from
+ *                from
  * 
  * @private
  */
@@ -167,9 +167,9 @@ function foreignKey(from, propertyName, href) {
  *            validation.
  * 
  * @param {String}
- *            name name of the resource
+ *                name name of the resource
  * @param {Object}
- *            schema JSON Schema for validation of instances
+ *                schema JSON Schema for validation of instances
  */
 function Resource(name, schema) {
   var self = this;
@@ -188,7 +188,7 @@ exports.Resource = Resource;
 
 /**
  * Emits the 'init' event.
- *
+ * 
  * @private
  */
 Resource.prototype.init = function() {
@@ -199,9 +199,9 @@ Resource.prototype.init = function() {
  * Creates a new instance of the resource and saves it.
  * 
  * @param {Object}
- *            properties properties, the resulting instance will have
+ *                properties properties, the resulting instance will have
  * @param {Function(err,instance)}
- *            callback
+ *                callback
  */
 Resource.prototype.create = function(properties, callback) {
   var instance = this.instantiate(properties);
@@ -212,7 +212,7 @@ Resource.prototype.create = function(properties, callback) {
  * Creates an instance with some properties.
  * 
  * @param {Object}
- *            properties properties, the resulting instance will have
+ *                properties properties, the resulting instance will have
  * 
  * @returns {ResourceInstance} new instance
  */
@@ -237,9 +237,9 @@ Resource.prototype.__defineGetter__('lowerResource', function() {
  *            validation.
  * 
  * @param {String}
- *            name name of the resource
+ *                name name of the resource
  * @param {Object}
- *            schema JSON Schema for validation of instances
+ *                schema JSON Schema for validation of instances
  */
 function ResourceInstance() {
 }
@@ -258,11 +258,11 @@ ResourceInstance.prototype.validate = function() {
  * Get an array of matching instances.
  * 
  * @param {String|Object}
- *            query _id or query object that all resulting instances match
+ *                query _id or query object that all resulting instances match
  * @param {Object}
- *            [options]
+ *                [options]
  * @param {Function(err,instances)}
- *            callback
+ *                callback
  */
 Resource.prototype.get = function (query, options, callback) {
   if (arguments.length == 2) {
@@ -300,11 +300,11 @@ Resource.prototype.get = function (query, options, callback) {
  * Get the first matching instance.
  * 
  * @param {String|Object}
- *            query _id or query object that all resulting instances match
+ *                query _id or query object that all resulting instances match
  * @param {Object}
- *            [options]
+ *                [options]
  * @param {Function(err,instance)}
- *            callback
+ *                callback
  */
 Resource.prototype.getOne = function (query, options, callback) {
   if (arguments.length == 2) {
@@ -339,9 +339,9 @@ Resource.prototype.getOne = function (query, options, callback) {
  * Get an array of all instances of the schema.
  * 
  * @param {Object}
- *            [options]
+ *                [options]
  * @param {Function(err,instances)}
- *            callback
+ *                callback
  */
 Resource.prototype.all = function(options, callback) {
   if (arguments.length == 1) {
@@ -358,9 +358,9 @@ Resource.prototype.all = function(options, callback) {
  * the old instance is replaced.
  * 
  * @param {Object}
- *            [options]
+ *                [options]
  * @param {Function(err,saved)}
- *            callback
+ *                callback
  */
 ResourceInstance.prototype.save = function(options, callback) {
   if (arguments.length == 1) {
@@ -399,9 +399,9 @@ ResourceInstance.prototype.save = function(options, callback) {
  * Deletes the instance.
  * 
  * @param {String}
- *            id id of the instance
+ *                id id of the instance
  * @param {Function(err,deleted)}
- *            callback
+ *                callback
  */
 Resource.prototype.delete = function(id, callback) {
   var collName = pluralize(this.name);
