@@ -1,17 +1,17 @@
-var persistence = require('../');
-var mem = require('persistence-memory');
+var restposten = require('../');
+var mem = require('restposten-memory');
 var JaySchema = require('jayschema');
 
-persistence.validator = new JaySchema();
+restposten.validator = new JaySchema();
 mem.connect({
-  name : 'persistence_test'
+  name : 'restposten_test'
 }, function(err, db) {
   if (err)
     throw err;
 
-  persistence.database = db;
+  restposten.database = db;
 
-  var Author = persistence.define('author', {
+  var Author = restposten.define('author', {
     "properties" : {
       "name" : {
         "type" : "string"

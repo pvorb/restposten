@@ -1,15 +1,15 @@
 // the same as in 'references.js', but it makes use of deferred relations
 
-var persistence = require('..');
-var memory = require('persistence-memory');
+var restposten = require('..');
+var memory = require('restposten-memory');
 var JaySchema = require('jayschema');
 
-persistence.validator = new JaySchema;
+restposten.validator = new JaySchema;
 
 memory.connect(function(err, db) {
-  persistence.database = db;
+  restposten.database = db;
 
-  var Book = persistence.define('book', {
+  var Book = restposten.define('book', {
     "properties" : {
       "id" : {
         "type" : "string"
@@ -24,7 +24,7 @@ memory.connect(function(err, db) {
     }
   });
 
-  var Author = persistence.define('author', {
+  var Author = restposten.define('author', {
     "properties" : {
       "id" : {
         "type" : "string"

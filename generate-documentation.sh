@@ -1,4 +1,4 @@
 #!/bin/sh
 
-rm ../persistence-pages/*.html
+rm ../restposten-pages/*.html
 jsdoc -c conf/jsdoc.json
