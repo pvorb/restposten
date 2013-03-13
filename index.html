@@ -41,11 +41,11 @@
 
 
     <section>
-        <article><h1>persistence</h1>
+        <article><h1>Restposten</h1>
 
-<p>Persistence is a data persistence module for <a href="http://flatironjs.org/">flatiron</a>.
+<p>Restposten is a data persistence module for <a href="http://flatironjs.org/">flatiron</a>.
 It&#39;s an adaptation of <a href="https://github.com/flatiron/resourceful">resourceful</a>.
-You can replace resourceful in your flatiron app by persistence. It uses <a href="http://json-schema.org/">JSON
+You can replace resourceful in your flatiron app by Restposten. It uses <a href="http://json-schema.org/">JSON
 Schema</a> for data validation. It also has support for
 JSON Schema links, which are directly mapped to relations in the internal data
 model. Being a replacement for resourceful you can use it with
@@ -53,47 +53,47 @@ model. Being a replacement for resourceful you can use it with
 
 <h2>Installation</h2>
 
-<pre><code>npm install persistence</code></pre>
+<pre><code>npm install restposten</code></pre>
 
 <p>You also have to provide a database engine, a cache and a JSON Schema validator.</p>
 
 <p>Currently, there are two database engines:
-<a href="https://github.com/n-fuse/persistence-mongodb">persistence-mongodb</a> and
-<a href="https://github.com/n-fuse/persistence-memory">persistence-memory</a> (a in-memory
+<a href="https://github.com/n-fuse/restposten-mongodb">restposten-mongodb</a> and
+<a href="https://github.com/n-fuse/restposten-memory">restposten-memory</a> (a in-memory
 database for testing purposes).</p>
 
-<pre><code>npm install persistence-mongodb</code></pre>
+<pre><code>npm install restposten-mongodb</code></pre>
 
 <p>or</p>
 
-<pre><code>npm install persistence-memory</code></pre>
+<pre><code>npm install restposten-memory</code></pre>
 
 <p>The recommended schema validator is
 <a href="https://github.com/natesilva/jayschema">JaySchema</a>.</p>
 
-<pre><code>npm install persistence-cache jayschema</code></pre>
+<pre><code>npm install jayschema</code></pre>
 
 <h2>API documentation</h2>
 
-<p>You can find the API docs at <a href="http://n-fuse.github.com/persistence/">http://n-fuse.github.com/persistence/</a>.</p>
+<p>You can find the API docs at <a href="http://n-fuse.github.com/restposten/">http://n-fuse.github.com/restposten/</a>.</p>
 
 <h2>Usage</h2>
 
 <h3>Simple example</h3>
 
-<p>This example uses <em>persistence-mongodb</em> and <em>JaySchema</em>.</p>
+<p>This example uses <em>restposten-mongodb</em> and <em>JaySchema</em>.</p>
 
-<pre><code>var persistence = require(&#39;persistence&#39;);
-var mongo = require(&#39;persistence-mongodb&#39;);
+<pre><code>var restposten = require(&#39;restposten&#39;);
+var mongo = require(&#39;restposten-mongodb&#39;);
 var JaySchema = require(&#39;jayschema&#39;);
 
-persistence.validator = new JaySchema();
+restposten.validator = new JaySchema();
 
 mongo.connect({ host: &#39;localhost&#39;, port: 27017 }, function (err, db) {
   if (err)
     throw err;
 
-  persistence.database = db;
+  restposten.database = db;
 
   // Example schema
   var userSchema = {
@@ -118,10 +118,10 @@ mongo.connect({ host: &#39;localhost&#39;, port: 27017 }, function (err, db) {
 
   // Register a schema for validation.
   // This is only required, if you have schemas that reference each other.
-  persistence.validator.register(userSchema);
+  restposten.validator.register(userSchema);
 
   // Define the User resource.
-  var User = persistence.define(&#39;user&#39;, userSchema);
+  var User = restposten.define(&#39;user&#39;, userSchema);
 
   // Create a user, who&#39;s missing an email address. This will throw an error.
   User.create({
@@ -140,7 +140,7 @@ examples and further documentation on JSON Schema.</p>
 
 <h3>More advanced examples</h3>
 
-<p>You can see more advanced examples in <a href="https://github.com/n-fuse/persistence/tree/master/examples/">examples/</a>.</p>
+<p>You can see more advanced examples in <a href="https://github.com/n-fuse/restposten/tree/master/examples/">examples/</a>.</p>
 
 <h2>Maintainers</h2>
 
@@ -148,7 +148,7 @@ examples and further documentation on JSON Schema.</p>
 
 <h2>License</h2>
 
-<p><a href="https://github.com/n-fuse/persistence/tree/master/LICENSE.txt">Apache 2.0 License</a></p></article>
+<p><a href="https://github.com/n-fuse/restposten/tree/master/LICENSE.txt">MIT License</a></p></article>
     </section>
 
 
@@ -159,13 +159,13 @@ examples and further documentation on JSON Schema.</p>
 </div>
 
 <nav>
-    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-persistence.html">persistence</a></li></ul><h3>Classes</h3><ul><li><a href="694b5b5022.html">Resource</a></li><li><a href="2705e3d844.html">ResourceInstance</a></li></ul>
+    <h2><a href="index.html">Index</a></h2><h3>Modules</h3><ul><li><a href="module-restposten.html">restposten</a></li></ul><h3>Classes</h3><ul><li><a href="d350190c4f.html">Resource</a></li><li><a href="057fa5f6e3.html">ResourceInstance</a></li></ul>
 </nav>
 
 <br clear="both">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.1.1</a> on Fri Mar 08 2013 15:28:19 GMT+0100 (CET)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.1.1</a> on Wed Mar 13 2013 17:06:40 GMT+0100 (CET)
 </footer>
 
 <script> prettyPrint(); </script>
