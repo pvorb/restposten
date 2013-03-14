@@ -5,7 +5,7 @@
  * resourceful and is intended to be used as a replacement for Resourceful. It
  * uses JSON Schema for data validation. It also has support for JSON Schema
  * links, which are directly mapped to relations in the internal data model.
- * 
+ *
  * @module restposten
  */
 
@@ -25,7 +25,7 @@ exports.validator;
 
 /**
  * Registers a resource.
- * 
+ *
  * @param {String}
  *                name
  * @param {Resource}
@@ -37,7 +37,7 @@ exports.register = function(name, resource) {
 
 /**
  * Unregisters a resource.
- * 
+ *
  * @param {String}
  *                name
  */
@@ -47,20 +47,20 @@ exports.unregister = function(name) {
 
 /**
  * Defines a new schema factory for creating instances of schemas.
- * 
+ *
  * @param {String}
  *                name lower case singular name of the schema (e.g. `'address'`)
  * @param {Object}
  *                schema JSON schema object
- * 
+ *
  * @returns factory function for creating new instances
  */
 exports.define = function(name, schema) {
   var resource = new Resource(name, schema);
-  
+
   // register resource
   exports.register(name, resource);
-  
+
   // check if any deferred relationships from previously defined resources are
   // related to this resource
   if (typeof exports.deferredRelations[name] != 'undefined') {
@@ -70,25 +70,25 @@ exports.define = function(name, schema) {
       resolveRelations(r.resource);
     });
   }
-  
+
   // resolve the relations for the newly created resource
   resolveRelations(resource);
   resource.init();
-  
+
   return resource;
 };
 
 /**
  * Resolves the relations for a resource.
- * 
+ *
  * @param {Resource}
  *                resource
- * 
+ *
  * @private
  */
 function resolveRelations(resource) {
   var props = resource.schema.properties;
-  
+
   // go through the schema's properties and check for links with "rel": "full"
   Object.keys(props).forEach(function (key) {
     var property = props[key];
@@ -108,10 +108,10 @@ function resolveRelations(resource) {
 
 /**
  * Creates a foreign key relationship. (One-To-Many)
- * 
+ *
  * @param {Resource}
  *                from
- * 
+ *
  * @private
  */
 function foreignKey(from, propertyName, href) {
@@ -149,7 +149,7 @@ function foreignKey(from, propertyName, href) {
     query[propertyName] = this.properties._id;
     from.get(query, callback);
   };
-  
+
   var getOne = 'get' + camelize(otherResourceName);
 
   // define function to get the referenced document
@@ -161,11 +161,11 @@ function foreignKey(from, propertyName, href) {
 
 /**
  * Creates a resource with a name and a schema.
- * 
+ *
  * @constructor
  * @classdesc Resources are used to abstract away data management and
  *            validation.
- * 
+ *
  * @param {String}
  *                name name of the resource
  * @param {Object}
@@ -179,13 +179,13 @@ function Resource(name, schema) {
   // constructor for instances of this resource
   this.Instance = function(properties) {
     var inst = this;
-    
+
     // define not-enumerable properties
     Object.defineProperty(this, 'resource', {
       enumerable: false,
       value: self
     });
-    
+
     Object.defineProperty(this, 'properties', {
       enumerable: false,
       set: function (properties) {
@@ -193,7 +193,7 @@ function Resource(name, schema) {
         Object.keys(inst).forEach(function (k) {
           delete inst[k];
         });
-        
+
         // append new
         append(inst, properties);
       },
@@ -201,7 +201,7 @@ function Resource(name, schema) {
         return properties;
       }
     });
-    
+
     // mix all properties from properties into this
     append(this, properties);
   };
@@ -212,7 +212,7 @@ exports.Resource = Resource;
 
 /**
  * Emits the 'init' event.
- * 
+ *
  * @private
  */
 Resource.prototype.init = function() {
@@ -221,7 +221,7 @@ Resource.prototype.init = function() {
 
 /**
  * Creates a new instance of the resource and saves it.
- * 
+ *
  * @param {Object}
  *                properties properties, the resulting instance will have
  * @param {Function(err,instance)}
@@ -234,10 +234,10 @@ Resource.prototype.create = function(properties, callback) {
 
 /**
  * Creates an instance with some properties.
- * 
+ *
  * @param {Object}
  *                properties properties, the resulting instance will have
- * 
+ *
  * @returns {ResourceInstance} new instance
  */
 Resource.prototype.instantiate = function(properties) {
@@ -255,11 +255,11 @@ Resource.prototype.__defineGetter__('lowerResource', function() {
 /**
  * Creates an instance of a resource. Instances are usually created via
  * `Resource.create()`.
- * 
+ *
  * @constructor
  * @classdesc Resources are used to abstract away data management and
  *            validation.
- * 
+ *
  * @param {String}
  *                name name of the resource
  * @param {Object}
@@ -271,16 +271,41 @@ exports.ResourceInstance = ResourceInstance;
 
 /**
  * Validates itself by using the global JSON Schema validator.
- * 
+ *
  * @returns {Object[]} an array of objects that contain error information
  */
 ResourceInstance.prototype.validate = function() {
-  return exports.validator.validate(this.properties, this.resource.schema);
+  var errs = exports.validator.validate(this.properties, this.resource.schema);
+
+  // transform the errors into a more convenient format
+  var len = errs.length;
+  var i, e1, e2;
+  for (i = 0; i < len; i++) {
+    e1 = errs[i];
+
+    e2 = {
+      errorType: e1.kind,
+      errorMessage: e1.desc
+    };
+
+    var context = e1.instanceContext;
+
+    if (context !== "#")
+      e2.property = context.replace(/^#\//, '').replace(/\//, '.');
+
+    e2.requirement = {};
+    e2.requirement[e1.constraintName] = e1.constraintValue;
+    e2.given = e1.value;
+
+    errs[i] = e2;
+  }
+
+  return errs;
 };
 
 /**
  * Get an array of matching instances.
- * 
+ *
  * @param {String|Object}
  *                query _id or query object that all resulting instances match
  * @param {Object}
@@ -321,7 +346,7 @@ Resource.prototype.get = function (query, options, callback) {
 
 /**
  * Get the first matching instance.
- * 
+ *
  * @param {String|Object}
  *                query _id or query object that all resulting instances match
  * @param {Object}
@@ -339,7 +364,7 @@ Resource.prototype.getOne = function (query, options, callback) {
 
   if (typeof query == 'string')
     query = { _id: query };
-  
+
   var collName = pluralize(this.name);
 
   exports.database.getCollection(collName, function(err, coll) {
@@ -360,7 +385,7 @@ Resource.prototype.getOne = function (query, options, callback) {
 
 /**
  * Get an array of all instances of the schema.
- * 
+ *
  * @param {Object}
  *                [options]
  * @param {Function(err,instances)}
@@ -379,7 +404,7 @@ Resource.prototype.all = function(options, callback) {
 /**
  * Saves itself to the database. If the instance already exists in the database,
  * the old instance is replaced.
- * 
+ *
  * @param {Object}
  *                [options]
  * @param {Function(err,saved)}
@@ -390,28 +415,28 @@ ResourceInstance.prototype.save = function(options, callback) {
     callback = options;
     options = {};
   }
-  
+
   var instance = this;
-  
+
   // validate instance
   var errors = this.validate();
   if (errors.length > 0) {
     return callback(errors);
   }
-  
+
   // collection name is the plural of resource name
   var collName = pluralize(this.resource.name);
-  
+
   // get collection and save to the database
   exports.database.getCollection(collName, function(err, coll) {
     if (err)
       return callback(err);
-    
+
     // FIXME callback must receive new instance as a result
     coll.save(instance.properties, options, function(err, saved) {
       if (typeof saved == 'number')
         return callback(null, instance);
-      
+
       instance.properties = saved;
       callback(null, instance);
     });
@@ -420,7 +445,7 @@ ResourceInstance.prototype.save = function(options, callback) {
 
 /**
  * Deletes the instance.
- * 
+ *
  * @param {String}
  *                id id of the instance
  * @param {Function(err,deleted)}
