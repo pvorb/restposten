@@ -296,9 +296,8 @@ Resource.prototype.get = function (query, options, callback) {
 
   var resource = this;
 
-  if (typeof query == 'string') {
+  if (typeof query == 'string')
     query = { _id: query };
-  }
 
   var collName = pluralize(this.name);
 
