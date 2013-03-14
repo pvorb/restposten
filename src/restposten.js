@@ -291,7 +291,7 @@ ResourceInstance.prototype.validate = function() {
     var context = e1.instanceContext;
 
     if (context !== "#")
-      e2.property = context.replace(/^#\//, '').replace(/\//, '.');
+      e2.property = context.replace(/^#\//, '').replace(/\//g, '.');
     
     if (typeof e1.testedValue != 'undefined')
       e2.value = e1.testedValue;
