@@ -292,10 +292,12 @@ ResourceInstance.prototype.validate = function() {
 
     if (context !== "#")
       e2.property = context.replace(/^#\//, '').replace(/\//, '.');
+    
+    if (typeof e1.testedValue != 'undefined')
+      e2.value = e1.testedValue;
 
-    e2.requirement = {};
-    e2.requirement[e1.constraintName] = e1.constraintValue;
-    e2.given = e1.value;
+    e2.constraint = {};
+    e2.constraint[e1.constraintName] = e1.constraintValue;
 
     errs[i] = e2;
   }
