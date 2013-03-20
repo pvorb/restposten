@@ -5,7 +5,7 @@
  * resourceful and is intended to be used as a replacement for Resourceful. It
  * uses JSON Schema for data validation. It also has support for JSON Schema
  * links, which are directly mapped to relations in the internal data model.
- *
+ * 
  * @module restposten
  */
 
@@ -25,7 +25,7 @@ exports.validator;
 
 /**
  * Registers a resource.
- *
+ * 
  * @param {String}
  *                name
  * @param {Resource}
@@ -37,7 +37,7 @@ exports.register = function(name, resource) {
 
 /**
  * Unregisters a resource.
- *
+ * 
  * @param {String}
  *                name
  */
@@ -47,12 +47,12 @@ exports.unregister = function(name) {
 
 /**
  * Defines a new schema factory for creating instances of schemas.
- *
+ * 
  * @param {String}
  *                name lower case singular name of the schema (e.g. `'address'`)
  * @param {Object}
  *                schema JSON schema object
- *
+ * 
  * @returns factory function for creating new instances
  */
 exports.define = function(name, schema) {
@@ -80,10 +80,10 @@ exports.define = function(name, schema) {
 
 /**
  * Resolves the relations for a resource.
- *
+ * 
  * @param {Resource}
  *                resource
- *
+ * 
  * @private
  */
 function resolveRelations(resource) {
@@ -108,10 +108,10 @@ function resolveRelations(resource) {
 
 /**
  * Creates a foreign key relationship. (One-To-Many)
- *
+ * 
  * @param {Resource}
  *                from
- *
+ * 
  * @private
  */
 function foreignKey(from, propertyName, href) {
@@ -161,11 +161,11 @@ function foreignKey(from, propertyName, href) {
 
 /**
  * Creates a resource with a name and a schema.
- *
+ * 
  * @constructor
  * @classdesc Resources are used to abstract away data management and
  *            validation.
- *
+ * 
  * @param {String}
  *                name name of the resource
  * @param {Object}
@@ -212,7 +212,7 @@ exports.Resource = Resource;
 
 /**
  * Emits the 'init' event.
- *
+ * 
  * @private
  */
 Resource.prototype.init = function() {
@@ -221,7 +221,7 @@ Resource.prototype.init = function() {
 
 /**
  * Creates a new instance of the resource and saves it.
- *
+ * 
  * @param {Object}
  *                properties properties, the resulting instance will have
  * @param {Function(err,instance)}
@@ -234,10 +234,10 @@ Resource.prototype.create = function(properties, callback) {
 
 /**
  * Creates an instance with some properties.
- *
+ * 
  * @param {Object}
  *                properties properties, the resulting instance will have
- *
+ * 
  * @returns {ResourceInstance} new instance
  */
 Resource.prototype.instantiate = function(properties) {
@@ -255,11 +255,11 @@ Resource.prototype.__defineGetter__('lowerResource', function() {
 /**
  * Creates an instance of a resource. Instances are usually created via
  * `Resource.create()`.
- *
+ * 
  * @constructor
  * @classdesc Resources are used to abstract away data management and
  *            validation.
- *
+ * 
  * @param {String}
  *                name name of the resource
  * @param {Object}
@@ -271,7 +271,7 @@ exports.ResourceInstance = ResourceInstance;
 
 /**
  * Validates itself by using the global JSON Schema validator.
- *
+ * 
  * @returns {Object[]} an array of objects that contain error information
  */
 ResourceInstance.prototype.validate = function() {
@@ -307,7 +307,7 @@ ResourceInstance.prototype.validate = function() {
 
 /**
  * Get an array of matching instances.
- *
+ * 
  * @param {String|Object}
  *                query _id or query object that all resulting instances match
  * @param {Object}
@@ -315,8 +315,12 @@ ResourceInstance.prototype.validate = function() {
  * @param {Function(err,instances)}
  *                callback
  */
-Resource.prototype.get = function (query, options, callback) {
+Resource.prototype.get = function (query, fields, options, callback) {
   if (arguments.length == 2) {
+    callback = fields;
+    options = {};
+    fields = {};
+  } else if (arguments.length == 3) {
     callback = options;
     options = {};
   }
@@ -332,7 +336,7 @@ Resource.prototype.get = function (query, options, callback) {
     if (err)
       return callback(err);
 
-    coll.find(query, options, function (err, results) {
+    coll.find(query, fields, options, function (err, results) {
       if (err)
         return callback(err);
 
@@ -348,7 +352,7 @@ Resource.prototype.get = function (query, options, callback) {
 
 /**
  * Get the first matching instance.
- *
+ * 
  * @param {String|Object}
  *                query _id or query object that all resulting instances match
  * @param {Object}
@@ -356,8 +360,12 @@ Resource.prototype.get = function (query, options, callback) {
  * @param {Function(err,instance)}
  *                callback
  */
-Resource.prototype.getOne = function (query, options, callback) {
+Resource.prototype.getOne = function (query, fields, options, callback) {
   if (arguments.length == 2) {
+    callback = options;
+    options = {};
+    fields = {};
+  } else if (arguments.length == 3) {
     callback = options;
     options = {};
   }
@@ -373,7 +381,7 @@ Resource.prototype.getOne = function (query, options, callback) {
     if (err)
       return callback(err);
 
-    coll.findOne(query, options, function (err, result) {
+    coll.findOne(query, fields, options, function (err, result) {
       if (err)
         return callback(err);
 
@@ -387,26 +395,30 @@ Resource.prototype.getOne = function (query, options, callback) {
 
 /**
  * Get an array of all instances of the schema.
- *
+ * 
  * @param {Object}
  *                [options]
  * @param {Function(err,instances)}
  *                callback
  */
-Resource.prototype.all = function(options, callback) {
+Resource.prototype.all = function(fields, options, callback) {
   if (arguments.length == 1) {
-    callback = options;
+    callback = fields;
+    options = {};
+    fields = {};
+  } else if(arguments.length == 2) {
+    callback = fields;
     options = {};
   }
 
   // query all schema instances
-  this.get({}, options, callback);
+  this.get({}, fields, options, callback);
 };
 
 /**
  * Saves itself to the database. If the instance already exists in the database,
  * the old instance is replaced.
- *
+ * 
  * @param {Object}
  *                [options]
  * @param {Function(err,saved)}
@@ -447,7 +459,7 @@ ResourceInstance.prototype.save = function(options, callback) {
 
 /**
  * Deletes the instance.
- *
+ * 
  * @param {String}
  *                id id of the instance
  * @param {Function(err,deleted)}
