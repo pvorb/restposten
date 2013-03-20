@@ -233,6 +233,16 @@ Resource.prototype.create = function(properties, callback) {
 };
 
 /**
+ * Updates an instance of the resource.
+ * 
+ * @param {Object}
+ *                properties properties, the resulting instance will have
+ * @param {Function(err,instance)}
+ *                callback
+ */
+Resource.prototype.save = Resource.prototype.create;
+
+/**
  * Creates an instance with some properties.
  * 
  * @param {Object}
@@ -356,6 +366,8 @@ Resource.prototype.get = function (query, fields, options, callback) {
  * @param {String|Object}
  *                query _id or query object that all resulting instances match
  * @param {Object}
+ *                [fields]
+ * @param {Object}
  *                [options]
  * @param {Function(err,instance)}
  *                callback
@@ -396,6 +408,8 @@ Resource.prototype.getOne = function (query, fields, options, callback) {
 /**
  * Get an array of all instances of the schema.
  * 
+ * @param {Object}
+ *                [fields]
  * @param {Object}
  *                [options]
  * @param {Function(err,instances)}
