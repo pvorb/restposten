@@ -22,6 +22,7 @@ exports.resources = {};
 exports.deferredRelations = {};
 exports.database;
 exports.validator;
+exports.commonSchemas = {};
 
 /**
  * Registers a resource.
@@ -46,6 +47,16 @@ exports.unregister = function(name) {
 };
 
 /**
+ * Registers a schema for common use.
+ */
+exports.registerCommonSchema = function(schema) {
+  if (typeof schema.id != 'undefined') {
+    exports.commonSchemas[schema.id] = schema;
+    exports.validator.register(schema);
+  }
+};
+
+/**
  * Defines a new schema factory for creating instances of schemas.
  * 
  * @param {String}
@@ -56,8 +67,11 @@ exports.unregister = function(name) {
  * @returns factory function for creating new instances
  */
 exports.define = function(name, schema) {
+  // register schema
+  exports.registerCommonSchema(schema);
+  
   var resource = new Resource(name, schema);
-
+  
   // register resource
   exports.register(name, resource);
 
@@ -157,7 +171,7 @@ function foreignKey(from, propertyName, href) {
   from.Instance.prototype[getOne] = function(callback) {
     other.getOne(this.properties[propertyName], callback);
   }
-};
+}
 
 /**
  * Creates a resource with a name and a schema.
@@ -170,11 +184,28 @@ function foreignKey(from, propertyName, href) {
  *                name name of the resource
  * @param {Object}
  *                schema JSON Schema for validation of instances
+ *                
  */
 function Resource(name, schema) {
   var self = this;
   this.schema = schema;
   this.name = name;
+
+  this.allProperties = schema.properties;
+  if (typeof schema.allOf != 'undefined') {
+    schema.allOf.reverse().forEach(function (inc) {
+      var other = {};
+      if (typeof inc['$ref'] != 'undefined')
+        other = exports.commonSchemas[inc['$ref']];
+      else
+        other = inc;
+
+      if (typeof other.properties == 'undefined')
+        return;
+      
+      self.allProperties = append(other.properties, self.allProperties);
+    });
+  }
 
   // constructor for instances of this resource
   this.Instance = function(properties) {
@@ -207,6 +238,7 @@ function Resource(name, schema) {
   };
   this.Instance.prototype = new ResourceInstance;
 }
+
 Resource.prototype = new events.EventEmitter;
 exports.Resource = Resource;
 
