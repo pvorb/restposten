@@ -184,7 +184,7 @@ function foreignKey(from, propertyName, href) {
  *                name name of the resource
  * @param {Object}
  *                schema JSON Schema for validation of instances
- *                
+ * 
  */
 function Resource(name, schema) {
   var self = this;
@@ -434,6 +434,32 @@ Resource.prototype.getOne = function (query, fields, options, callback) {
 
       callback(null, result);
     });
+  });
+};
+
+/**
+ * Count all matching instances.
+ * 
+ * @param {Object}
+ *                [query]
+ * @param {Object}
+ *                [options]
+ * @param {Function(err,count)}
+ *                callback
+ */
+Resource.prototype.count = function(query, options, callback) {
+  if (arguments.length == 1) {
+    callback = query;
+    query = {};
+    options = {};
+  } else if (arguments.length == 2) {
+    callback = options;
+    options = {};
+  }
+  
+  var collName = pluralize(this.name);
+  exports.database.getCollection(collName, function (err, coll) {
+    coll.count(query, options, callback);
   });
 };
 
