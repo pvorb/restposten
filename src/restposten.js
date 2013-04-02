@@ -52,7 +52,8 @@ exports.unregister = function(name) {
 exports.registerCommonSchema = function(schema) {
   if (typeof schema.id != 'undefined') {
     exports.commonSchemas[schema.id] = schema;
-    exports.validator.register(schema);
+    if (typeof exports.validator != 'undefined')
+      exports.validator.register(schema);
   }
 };
 
@@ -406,7 +407,7 @@ Resource.prototype.get = function (query, fields, options, callback) {
  */
 Resource.prototype.getOne = function (query, fields, options, callback) {
   if (arguments.length == 2) {
-    callback = options;
+    callback = fields;
     options = {};
     fields = {};
   } else if (arguments.length == 3) {
