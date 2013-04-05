@@ -1,32 +1,32 @@
 {
-	"name": "restposten",
-	"version": "0.0.0",
-	"description": "Data persistence module for flatiron",
-	"private": true,
-	"author": {
-		"name": "n-fuse Gmbh, Thomas Hoppe et. al.",
-		"email": "info@n-fuse.de"
-	},
-	"maintainers": ["Paul Vorbach <paul@vorb.de>"],
-	"main": "./src/restposten.js",
-	"homepage": "http://www.invend.eu",
-	"bugs": {
-		"url": "https://github.com/n-fuse/restposten/issues"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/n-fuse/restposten.git"
-	},
-	"dependencies": {
-		"append": "~0.1.1",
-		"clone": "~0.1.5",
-		"errs": "~0.2.3",
-		"i": "~0.3.1"
-	},
-	"devDependencies": {
-		"jayschema": "~0.1.5",
-		"mocha": "*",
-		"restposten-memory": "*",
-		"flatiron": "*"
-	}
-} 
+  "name": "restposten",
+  "version": "0.0.0",
+  "description": "Data persistence module for flatiron",
+  "private": true,
+  "author": {
+    "name": "n-fuse Gmbh, Thomas Hoppe et. al.",
+    "email": "info@n-fuse.de"
+  },
+  "maintainers": ["Paul Vorbach <paul@vorb.de>"],
+  "main": "./src/restposten.js",
+  "homepage": "http://www.invend.eu",
+  "bugs": {
+    "url": "https://github.com/n-fuse/restposten/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/n-fuse/restposten.git"
+  },
+  "dependencies": {
+    "append": "~0.1.1",
+    "clone": "~0.1.5",
+    "errs": "~0.2.3",
+    "i": "~0.3.1"
+  },
+  "devDependencies": {
+    "jayschema": "~0.1.5",
+    "mocha": "*",
+    "restposten-memory": "*",
+    "flatiron": "*"
+  }
+}
