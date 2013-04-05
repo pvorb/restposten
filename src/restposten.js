@@ -266,7 +266,7 @@ Resource.prototype.create = function(properties, callback) {
 };
 
 /**
- * Updates an instance of the resource.
+ * Updates an instance of the resource. (Must have an _id property)
  * 
  * @param {Object}
  *                properties properties, the resulting instance will have
@@ -274,6 +274,29 @@ Resource.prototype.create = function(properties, callback) {
  *                callback
  */
 Resource.prototype.save = Resource.prototype.create;
+
+/**
+ * Updates an instance of the resource. (Must match the criteria)
+ * 
+ * @param {Object}
+ *                properties properties, the resulting instance will have
+ * @param {Function(err,instance)}
+ *                callback
+ */
+Resource.prototype.update = function(criteria, properties, callback) {
+  var instance = this.instantiate(properties);
+  exports.database.getCollection(collName, function(err, coll) {
+    if (err)
+      return callback(err);
+
+    coll.update(criteria, properties, options, function (err, result) {
+      if (err)
+        return callback(err);
+
+      callback(null, result);
+    });
+  });
+};
 
 /**
  * Creates an instance with some properties.
@@ -531,20 +554,20 @@ ResourceInstance.prototype.save = function(options, callback) {
 };
 
 /**
- * Deletes the instance.
+ * Deletes all matching instances.
  * 
- * @param {String}
- *                id id of the instance
+ * @param {Object}
+ *                query
  * @param {Function(err,deleted)}
  *                callback
  */
-Resource.prototype.delete = function(id, callback) {
+Resource.prototype.delete = function(query, callback) {
   var collName = pluralize(this.name);
 
   exports.database.getCollection(collName, function (err, coll) {
     if (err)
       return callback(err);
 
-    coll.delete({ _id: id }, callback);
+    coll.delete(query, callback);
   });
 };
