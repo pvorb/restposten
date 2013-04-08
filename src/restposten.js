@@ -58,6 +58,16 @@ exports.registerCommonSchema = function(schema) {
 };
 
 /**
+ * Sets the JSON Schema validator.
+ */
+exports.setValidator = function(validator) {
+  exports.validator = validator;
+  Object.keys(exports.commonSchemas).forEach(function (id) {
+    validator.register(exports.commonSchemas[id]);
+  });
+}
+
+/**
  * Defines a new schema factory for creating instances of schemas.
  * 
  * @param {String}
