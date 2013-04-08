@@ -283,8 +283,14 @@ Resource.prototype.save = Resource.prototype.create;
  * @param {Function(err,instance)}
  *                callback
  */
-Resource.prototype.update = function(criteria, properties, callback) {
+Resource.prototype.update = function(criteria, properties, options, callback) {
+  if (arguments.length == 3) {
+    callback = options;
+    options = {};
+  }
+
   var instance = this.instantiate(properties);
+  var collName = pluralize(this.name);
   exports.database.getCollection(collName, function(err, coll) {
     if (err)
       return callback(err);
